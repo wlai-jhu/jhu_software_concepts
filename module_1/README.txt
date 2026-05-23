@@ -20,11 +20,3 @@ Run:
 
 2. Open the site in a browser:
    http://127.0.0.1:8080
-
-Before submitting:
-- Confirm app/static/img/wade-lai-headshot.jpeg is the picture you want to submit.
-- Confirm the school logo image files are saved as:
-  app/static/img/schools/jhu-logo.jpg
-  app/static/img/schools/umd-logo.jpg
-  app/static/img/schools/umsl-logo.jpg
-- Save screenshots of the running site as a PDF in this module_1 folder.
