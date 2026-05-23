@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Wade Lai - Module 1{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <header class="site-header">
+        <a class="site-name" href="{{ url_for('pages.home') }}">Wade Lai</a>
+        <nav class="navbar" aria-label="Main navigation">
+            <a class="{% if request.endpoint == 'pages.home' %}active{% endif %}" href="{{ url_for('pages.home') }}">Home</a>
+            <a class="{% if request.endpoint == 'pages.contact' %}active{% endif %}" href="{{ url_for('pages.contact') }}">Contact</a>
+            <a class="{% if request.endpoint == 'pages.projects' %}active{% endif %}" href="{{ url_for('pages.projects') }}">Projects</a>
+        </nav>
+    </header>
+
+    <main class="page-shell">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

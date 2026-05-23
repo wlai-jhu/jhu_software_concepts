@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Wade Lai{% endblock %}
+
+{% block content %}
+<section class="home-grid">
+    <div class="bio-panel">
+        <p class="eyebrow">Homepage</p>
+        <h1>Wade Lai</h1>
+        <h2>Student, Modern Software Concepts in Python</h2>
+        <p>
+            I am building practical software development skills through the Johns Hopkins
+            Modern Software Concepts in Python course. This site introduces my Module 1
+            Flask project and gives visitors a simple way to learn about my work.
+        </p>
+        <p>
+            Update this bio with your own background, technical interests, current role,
+            and career goals before submitting the assignment.
+        </p>
+    </div>
+
+    <div class="image-panel">
+        <img src="{{ url_for('static', filename='img/profile.svg') }}" alt="Profile picture for Wade Lai">
+    </div>
+</section>
+{% endblock %}
