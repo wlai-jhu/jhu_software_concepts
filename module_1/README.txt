@@ -13,13 +13,18 @@ Setup:
 
 Run:
 1. Start the Flask site:
+   python run.py
+
+   If your terminal is not already using the virtual environment, run:
    .venv/bin/python run.py
+
 2. Open the site in a browser:
    http://127.0.0.1:8080
 
 Before submitting:
-- Replace the placeholder email address in app/templates/contact.html.
-- Replace the placeholder LinkedIn URL in app/templates/contact.html.
-- Replace the placeholder GitHub URL in app/templates/projects.html.
-- Replace app/static/img/profile.svg with your own picture if required by your instructor.
+- Confirm app/static/img/wade-lai-headshot.jpeg is the picture you want to submit.
+- Confirm the school logo image files are saved as:
+  app/static/img/schools/jhu-logo.jpg
+  app/static/img/schools/umd-logo.jpg
+  app/static/img/schools/umsl-logo.jpg
 - Save screenshots of the running site as a PDF in this module_1 folder.

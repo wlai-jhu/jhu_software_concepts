@@ -8,7 +8,10 @@
 </head>
 <body>
     <header class="site-header">
-        <a class="site-name" href="{{ url_for('pages.home') }}">Wade Lai</a>
+        <a class="site-name" href="{{ url_for('pages.home') }}">
+            <span class="site-name-main">Wade Lai</span>
+            <span class="site-name-sub">Engineering | AI | Public Service</span>
+        </a>
         <nav class="navbar" aria-label="Main navigation">
             <a class="{% if request.endpoint == 'pages.home' %}active{% endif %}" href="{{ url_for('pages.home') }}">Home</a>
             <a class="{% if request.endpoint == 'pages.contact' %}active{% endif %}" href="{{ url_for('pages.contact') }}">Contact</a>
@@ -19,5 +22,9 @@
     <main class="page-shell">
         {% block content %}{% endblock %}
     </main>
+
+    <footer class="site-footer">
+        <p>Johns Hopkins University - Modern Software Concepts in Python</p>
+    </footer>
 </body>
 </html>

@@ -5,22 +5,51 @@
 {% block content %}
 <section class="home-grid">
     <div class="bio-panel">
-        <p class="eyebrow">Homepage</p>
+        <p class="eyebrow">HOMEPAGE</p>
         <h1>Wade Lai</h1>
-        <h2>Student, Modern Software Concepts in Python</h2>
+        <h2>General Engineer | M.S. Artificial Intelligence Student</h2>
         <p>
-            I am building practical software development skills through the Johns Hopkins
-            Modern Software Concepts in Python course. This site introduces my Module 1
-            Flask project and gives visitors a simple way to learn about my work.
+            I am building practical software development skills through the Johns Hopkins Modern
+            Software Concepts in Python course. This site has my projects
+            and highlights my professional background in engineering, facilities, energy, and
+            public service.
+        </p>
+        <p class="section-label"><strong>BIO</strong></p>
+        <p>
+            Wade Lai is a General Engineer with the U.S. Department of Energy, where he supports one of the world’s largest environmental cleanup efforts focused on addressing the legacy of nuclear weapons production and government-sponsored nuclear energy research. Prior to joining the Department of Energy, Wade worked for the Naval Sea Systems Command (NAVSEA) at the Washington Navy Yard, supporting Nuclear Aircraft Carriers as an electrical engineer.
         </p>
         <p>
-            Update this bio with your own background, technical interests, current role,
-            and career goals before submitting the assignment.
+            Before his time with NAVSEA, Wade served for three years with Washington Headquarters Services at the Pentagon Reservation as an electrical subject matter expert, supporting major building renovation and infrastructure modernization projects. He also spent a decade with the U.S. Coast Guard, where he supported numerous Coast Guard Cutters and conducted electrical plan reviews for a wide range of commercial vessels.
         </p>
+        <p>
+            Throughout his career, Wade has developed expertise in engineering, project management, energy management, facilities operations, and process improvement. He is a licensed Professional Engineer, Project Management Professional, Leadership in Energy and Environmental Design Green Associate, Certified Energy Manager, Certified Facility Manager, and Lean Six Sigma Black Belt.
+        </p>
+        <p>
+            Wade earned a Bachelor of Science in Electrical Engineering from the University of Missouri–St. Louis, a Master of Engineering in Electrical and Computer Engineering from the University of Maryland, and a Master of Business Administration from the University of Maryland. He is currently pursuing a Master of Science in Artificial Intelligence at Johns Hopkins University.
+        </p>
+        <p>
+            Outside of work, Wade enjoys playing board games, exploring different cuisines, attending fitness classes, and continuing to improve his golf and tennis game.
+        </p>
+        <div class="button-row" aria-label="Profile links">
+            <a class="button-primary" href="{{ url_for('static', filename='docs/wade-lai-resume.pdf') }}" target="_blank" rel="noopener">View Resume</a>
+            <a class="button-secondary" href="{{ url_for('pages.contact') }}">Contact Me</a>
+        </div>
     </div>
 
     <div class="image-panel">
-        <img src="{{ url_for('static', filename='img/profile.svg') }}" alt="Profile picture for Wade Lai">
+        <img src="{{ url_for('static', filename='img/wade-lai-headshot.jpeg') }}" alt="Professional headshot of Wade Lai">
+        <p class="photo-caption">Wade Lai</p>
+        <div class="school-logo-stack" aria-label="School logos">
+            <a href="https://www.jhu.edu/" target="_blank" rel="noopener" aria-label="Visit Johns Hopkins University">
+                <img src="{{ url_for('static', filename='img/schools/jhu-logo.jpg') }}" alt="Johns Hopkins University logo">
+            </a>
+            <a href="https://www.umd.edu/" target="_blank" rel="noopener" aria-label="Visit University of Maryland">
+                <img src="{{ url_for('static', filename='img/schools/umd-logo.jpg') }}" alt="University of Maryland logo">
+            </a>
+            <a href="https://www.umsl.edu/" target="_blank" rel="noopener" aria-label="Visit University of Missouri-St. Louis">
+                <img src="{{ url_for('static', filename='img/schools/umsl-logo.jpg') }}" alt="University of Missouri-St. Louis logo">
+            </a>
+        </div>
     </div>
 </section>
 {% endblock %}
