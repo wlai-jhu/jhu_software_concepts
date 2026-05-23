@@ -8,14 +8,20 @@
 </head>
 <body>
     <header class="site-header">
-        <a class="site-name" href="{{ url_for('pages.home') }}">
-            <span class="site-name-main">Wade Lai</span>
-            <span class="site-name-sub">Engineering | AI | Public Service</span>
-        </a>
+            <a class="site-logo" href="{{ url_for('pages.home') }}">
+                <img src="{{ url_for('static', filename='img/schools/jhu-wse-logo.jpg') }}"
+                     alt="Johns Hopkins University logo">
+            </a>
+        <div class="header-center">
+            <a class="site-name" href="{{ url_for('pages.home') }}">
+                <span class="site-name-main">EN.605.256: Modern Software Concepts in Python (Summer 2026)</span>
+                <span class="site-name-sub"></span>
+            </a> 
+        </div>
         <nav class="navbar" aria-label="Main navigation">
-            <a class="{% if request.endpoint == 'pages.home' %}active{% endif %}" href="{{ url_for('pages.home') }}">Home</a>
-            <a class="{% if request.endpoint == 'pages.contact' %}active{% endif %}" href="{{ url_for('pages.contact') }}">Contact</a>
+            <a class="{% if request.endpoint == 'pages.home' %}active{% endif %}" href="{{ url_for('pages.home') }}">Home</a>  
             <a class="{% if request.endpoint == 'pages.projects' %}active{% endif %}" href="{{ url_for('pages.projects') }}">Projects</a>
+            <a class="{% if request.endpoint == 'pages.contact' %}active{% endif %}" href="{{ url_for('pages.contact') }}">Contact</a>
         </nav>
     </header>
 
@@ -24,7 +30,7 @@
     </main>
 
     <footer class="site-footer">
-        <p>Johns Hopkins University - Modern Software Concepts in Python</p>
+        <p>Johns Hopkins University | Whiting School of Engineering | EN.605.256: Modern Software Concepts in Python | Summer 2026</p>
     </footer>
 </body>
 </html>
