@@ -129,7 +129,7 @@ Systematic Cleaning Edge Cases:
 - If the LLM output is partial, llm_clean.py keeps deterministic cleaned values for
   unprocessed rows and fills LLM fields with those fallback values so the JSON remains
   consistent.
-- The current local LLM run generated completed LLM standardization output for 6,625
+- The current local LLM run generated completed LLM standardization output for 7,625
   applicant records. llm_clean.py can continue from that point with --resume-llm, and the
   submitted llm_extend_applicant_data.json still contains standardized fields for all
   50,000 rows by combining available LLM output with deterministic fallback cleaning.
