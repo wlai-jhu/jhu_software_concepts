@@ -35,6 +35,12 @@ program and university fields while keeping the original scraped values for trac
 Applicant status values include Accepted, Rejected, Waitlisted, and Interview when those
 statuses are present in the public Grad Cafe table.
 
+The optional comment enrichment step is implemented in enrich_comments.py. The public
+survey table does not always include applicant comments, so this script politely visits
+public /result/ detail pages, reads the public admission notes field, and adds comments
+when notes are available. It uses urllib, BeautifulSoup, a configurable delay, progress
+metadata, and stop conditions for blocking or server errors.
+
 The assignment-provided local LLM hosting package is stored under:
 module_2/llm_hosting
 
@@ -106,9 +112,17 @@ Validate final JSON deliverables:
 The validator loads applicant_data.json and llm_extend_applicant_data.json, confirms each
 file has at least 50,000 records, and prints coverage counts for the required fields.
 
+Optional comment enrichment:
+../.venv/bin/python enrich_comments.py --input applicant_data.json --output applicant_data.json --max-detail-pages 200 --delay 1
+
+The submitted JSON files include comments recovered from the first 200 public detail
+pages checked by enrich_comments.py. At submission time, comments are available for 85
+records in both applicant_data.json and llm_extend_applicant_data.json.
+
 Systematic Cleaning Edge Cases:
-- Some Grad Cafe rows do not expose comments in the survey table view, so comments may be
-  None even though a detail page could contain more discussion.
+- Some Grad Cafe rows do not expose comments in the survey table view, so enrich_comments.py
+  checks public detail pages for the admission notes field. Many entries still have no
+  applicant-provided notes, so comments remain None when no public notes are available.
 - Some school names are user-entered or abbreviated, and the tiny local LLM occasionally
   introduces capitalization or accent artifacts. The final JSON preserves original
   program_name, university, and raw_text fields so these cases can be traced and improved.
