@@ -31,12 +31,14 @@ tags/entities, standardizes obvious school-name variants, preserves the original
 and writes valid JSON to applicant_data.json. The cleaning script also creates cleaned
 program and university fields while keeping the original scraped values for traceability.
 
-The assignment-provided local LLM hosting zip files should be added under:
+The assignment-provided local LLM hosting package is stored under:
 module_2/llm_hosting
 
-After the raw data exists, the local model package can be run from that folder according
-to the assignment instructions. The output should then be merged or copied into
-applicant_data.json while preserving the original program/university fields.
+The integration wrapper is implemented in llm_clean.py. It converts scraped records into
+the input format expected by llm_hosting/app.py, runs the local LLM command line interface,
+reads the JSONL output, merges llm_generated_program and llm_generated_university back
+into the applicant records, and writes applicant_data.json. The original program_name,
+university, and raw_text fields are preserved for traceability.
 
 Robots.txt Evidence:
 Before scraping, run:
@@ -60,6 +62,16 @@ python3 -m venv .venv
 Run:
 .venv/bin/python scrape.py --target 50000 --delay 3 --output data/raw_applicant_data.json
 .venv/bin/python clean.py --input data/raw_applicant_data.json --output applicant_data.json
+
+Run with local LLM standardization:
+cd llm_hosting
+../../.venv/bin/python -m pip install -r requirements.txt
+cd ..
+../.venv/bin/python llm_clean.py --input data/raw_applicant_data.json --output applicant_data.json
+
+The LLM workflow writes intermediate files to:
+data/llm_input.json
+data/llm_output.jsonl
 
 Known Bugs:
 Grad Cafe page structure may change, so the selectors in scrape.py may need adjustment if

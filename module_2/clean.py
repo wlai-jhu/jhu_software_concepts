@@ -33,6 +33,8 @@ def clean_data(records: List[Dict[str, Optional[str]]]) -> List[Dict[str, Option
         cleaned = dict(record)
         cleaned["program_name_cleaned"] = _clean_program_name(record.get("program_name"))
         cleaned["university_cleaned"] = _clean_university_name(record.get("university"))
+        cleaned["llm_generated_program"] = _clean_optional_text(record.get("llm_generated_program"))
+        cleaned["llm_generated_university"] = _clean_optional_text(record.get("llm_generated_university"))
         cleaned["comments"] = _clean_optional_text(record.get("comments"))
         cleaned["raw_text"] = _clean_optional_text(record.get("raw_text"))
         cleaned_records.append(cleaned)
