@@ -344,6 +344,8 @@ class GradCafeScraper:
             return "Accepted"
         if "rejected" in lowered:
             return "Rejected"
+        if "interview" in lowered:
+            return "Interview"
         if "waitlisted" in lowered or "wait list" in lowered:
             return "Waitlisted"
         return None

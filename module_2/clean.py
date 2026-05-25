@@ -33,6 +33,7 @@ def clean_data(records: List[Dict[str, Optional[str]]]) -> List[Dict[str, Option
         cleaned = dict(record)
         cleaned["program_name_cleaned"] = _clean_program_name(record.get("program_name"))
         cleaned["university_cleaned"] = _clean_university_name(record.get("university"))
+        cleaned["applicant_status"] = _clean_status(record.get("applicant_status"), record.get("raw_text"))
         cleaned["llm_generated_program"] = _clean_optional_text(record.get("llm_generated_program"))
         cleaned["llm_generated_university"] = _clean_optional_text(record.get("llm_generated_university"))
         cleaned["comments"] = _clean_optional_text(record.get("comments"))
@@ -64,6 +65,23 @@ def _clean_university_name(value: Optional[str]) -> Optional[str]:
         return None
     key = re.sub(r"[^a-z0-9 ]", "", text.lower()).strip()
     return UNIVERSITY_FIXES.get(key, text)
+
+
+def _clean_status(value: Optional[str], raw_text: Optional[str]) -> Optional[str]:
+    text = _clean_optional_text(value)
+    if text:
+        return text
+
+    raw = (raw_text or "").lower()
+    if "accepted" in raw:
+        return "Accepted"
+    if "rejected" in raw:
+        return "Rejected"
+    if "interview" in raw:
+        return "Interview"
+    if "waitlisted" in raw or "wait list" in raw:
+        return "Waitlisted"
+    return None
 
 
 def main() -> None:

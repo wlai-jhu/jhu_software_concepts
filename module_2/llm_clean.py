@@ -20,6 +20,7 @@ def prepare_llm_input(
     llm_input_path: str = DEFAULT_LLM_INPUT_PATH,
     llm_output_path: str = DEFAULT_LLM_OUTPUT_PATH,
     resume: bool = False,
+    limit: Optional[int] = None,
 ) -> None:
     """Create the JSON format expected by llm_hosting/app.py."""
     completed_indexes = _completed_llm_indexes(llm_output_path) if resume else set()
@@ -38,6 +39,8 @@ def prepare_llm_input(
                 "original_university": university,
             }
         )
+        if limit is not None and len(rows) >= limit:
+            break
 
     Path(llm_input_path).parent.mkdir(parents=True, exist_ok=True)
     Path(llm_input_path).write_text(json.dumps(rows, indent=2), encoding="utf-8")
@@ -85,7 +88,10 @@ def merge_llm_output(
         for line in file:
             if not line.strip():
                 continue
-            llm_row = json.loads(line)
+            try:
+                llm_row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
             index = llm_row.get("record_index")
             if not isinstance(index, int) or index < 0 or index >= len(merged):
                 continue
@@ -119,10 +125,11 @@ def clean_data_with_llm(
     output_path: str = DEFAULT_OUTPUT_PATH,
     skip_llm_run: bool = False,
     resume_llm: bool = False,
+    llm_batch_size: Optional[int] = None,
 ) -> List[Dict[str, Optional[str]]]:
     """Run local LLM standardization, merge results, and save extended applicant data."""
     records = load_data(input_path)
-    prepare_llm_input(records, resume=resume_llm)
+    prepare_llm_input(records, resume=resume_llm, limit=llm_batch_size)
     if not skip_llm_run:
         run_llm_standardizer(append=resume_llm)
     merged_records = merge_llm_output(records)
@@ -156,6 +163,12 @@ def main() -> None:
         action="store_true",
         help="Skip already completed record indexes in data/llm_output.jsonl and append new LLM output.",
     )
+    parser.add_argument(
+        "--llm-batch-size",
+        type=int,
+        default=None,
+        help="Process only the next N uncompleted rows during an LLM resume run.",
+    )
     args = parser.parse_args()
 
     records = clean_data_with_llm(
@@ -163,6 +176,7 @@ def main() -> None:
         output_path=args.output,
         skip_llm_run=args.skip_llm_run,
         resume_llm=args.resume_llm,
+        llm_batch_size=args.llm_batch_size,
     )
     print(f"Saved {len(records)} LLM-cleaned records to {args.output}")
 

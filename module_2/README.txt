@@ -32,6 +32,8 @@ The cleaning step is implemented in clean.py. It loads raw scraped records, remo
 tags/entities, standardizes obvious school-name variants, preserves the original raw text,
 and writes valid JSON to applicant_data.json. The cleaning script also creates cleaned
 program and university fields while keeping the original scraped values for traceability.
+Applicant status values include Accepted, Rejected, Waitlisted, and Interview when those
+statuses are present in the public Grad Cafe table.
 
 The assignment-provided local LLM hosting package is stored under:
 module_2/llm_hosting
@@ -92,6 +94,15 @@ data/llm_output.jsonl
 If the local LLM process is interrupted, resume it without reprocessing completed rows:
 ../.venv/bin/python llm_clean.py --input data/raw_applicant_data.json --output llm_extend_applicant_data.json --resume-llm
 
+For shorter repeatable resume runs, process the next batch of uncompleted rows:
+../.venv/bin/python llm_clean.py --input data/raw_applicant_data.json --output llm_extend_applicant_data.json --resume-llm --llm-batch-size 1000
+
+Validate final JSON deliverables:
+../.venv/bin/python validate.py
+
+The validator loads applicant_data.json and llm_extend_applicant_data.json, confirms each
+file has at least 50,000 records, and prints coverage counts for the required fields.
+
 Systematic Cleaning Edge Cases:
 - Some Grad Cafe rows do not expose comments in the survey table view, so comments may be
   None even though a detail page could contain more discussion.
@@ -113,3 +124,12 @@ identify the result container CSS class or table row structure, and update _cand
 or _parse_entry() accordingly. The regex-based parser is intentionally conservative and may
 leave some fields as None when the source text is inconsistent. Those records still preserve
 raw_text for reproducibility.
+
+Submission Checklist:
+- Submit the SSH URL for the private GitHub repository named jhu_software_concepts.
+- Confirm module_2 in GitHub contains scrape.py, clean.py, llm_clean.py, validate.py,
+  applicant_data.json, llm_extend_applicant_data.json, requirements.txt, README.txt,
+  evidence/screenshot.jpg, evidence/robots_check.txt, and llm_hosting.
+- Zip the final module_2 folder and submit it through Canvas before the deadline.
+- Do not submit the local virtual environment or downloaded model file; those are
+  reproducible from requirements.txt and the llm_hosting setup.
