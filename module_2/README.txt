@@ -54,6 +54,9 @@ evidence/robots_check.txt
 Also save a browser screenshot of the robots.txt page as:
 evidence/screenshot.jpg
 
+The evidence folder also includes evidence/README.txt, which explains what
+screenshot.jpg shows and how it supports robots.txt compliance.
+
 Robots.txt was checked using urllib. The saved robots_check.txt permits User-agent: *
 for public pages with Allow: / and disallows private/account pages such as /signin,
 /register, /profile, and password reset pages. The scraper refuses to scrape the
