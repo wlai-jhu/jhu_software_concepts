@@ -4,7 +4,7 @@ JHED ID: wlai8
 Module Info:
 Module 2 - Assignment: Web Scraping
 Title: Grad Cafe Applicant Data Scraper
-Due Date: Add the Canvas due date before submission.
+Due Date: May 31, 2026
 
 Approach:
 This module is organized as a small Python scraping and cleaning package. All assignment
