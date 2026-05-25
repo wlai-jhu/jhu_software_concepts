@@ -1,0 +1,70 @@
+Name: Wade Lai
+JHED ID: wlai8
+
+Module Info:
+Module 2 - Assignment: Web Scraping
+Title: Grad Cafe Applicant Data Scraper
+Due Date: Add the Canvas due date before submission.
+
+Approach:
+This module is organized as a small Python scraping and cleaning package. All assignment
+materials are stored inside the module_2 folder.
+
+The scraper is implemented in scrape.py. It uses urllib to construct Grad Cafe URLs,
+request robots.txt, inspect whether the configured public Grad Cafe results URL may be
+scraped, and request public result pages. The default target is 50,000 applicant records.
+The scraper uses BeautifulSoup and regular expressions to identify applicant entries,
+preserve the original raw listing text, and extract structured fields such as program,
+university, status, decision dates, term, student origin, GRE metrics, GPA, degree, comments,
+and source URL. The scraper includes a configurable delay between page requests and stops
+if the site returns blocking, rate-limit, or server rejection status codes such as 403, 429,
+or 5xx.
+
+The scraper can also use Selenium as an optional rendering tool if Grad Cafe pages require
+browser rendering. Selenium is controlled by passing --selenium when running scrape.py.
+The Selenium workflow uses Chrome through Selenium Manager and an explicit wait for the
+page body before collecting page_source for BeautifulSoup parsing. Selenium is not used to
+bypass robots.txt, login requirements, CAPTCHAs, access controls, or rate limits.
+
+The cleaning step is implemented in clean.py. It loads raw scraped records, removes HTML
+tags/entities, standardizes obvious school-name variants, preserves the original raw text,
+and writes valid JSON to applicant_data.json. The cleaning script also creates cleaned
+program and university fields while keeping the original scraped values for traceability.
+
+The assignment-provided local LLM hosting zip files should be added under:
+module_2/llm_hosting
+
+After the raw data exists, the local model package can be run from that folder according
+to the assignment instructions. The output should then be merged or copied into
+applicant_data.json while preserving the original program/university fields.
+
+Robots.txt Evidence:
+Before scraping, run:
+python scrape.py --check-robots-only
+
+This writes the fetched robots.txt text to:
+evidence/robots_check.txt
+
+Also save a browser screenshot of the robots.txt page as:
+evidence/screenshot.jpg
+
+Robots.txt was checked using urllib. The saved robots_check.txt permits User-agent: *
+for public pages with Allow: / and disallows private/account pages such as /signin,
+/register, /profile, and password reset pages. The scraper refuses to scrape the
+configured target if robots.txt does not permit it.
+
+Install:
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+
+Run:
+.venv/bin/python scrape.py --target 50000 --delay 3 --output data/raw_applicant_data.json
+.venv/bin/python clean.py --input data/raw_applicant_data.json --output applicant_data.json
+
+Known Bugs:
+Grad Cafe page structure may change, so the selectors in scrape.py may need adjustment if
+the scraper reports zero applicant records. If that happens, inspect a saved page source,
+identify the result container CSS class or table row structure, and update _candidate_entries()
+or _parse_entry() accordingly. The regex-based parser is intentionally conservative and may
+leave some fields as None when the source text is inconsistent. Those records still preserve
+raw_text for reproducibility.
