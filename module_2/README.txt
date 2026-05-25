@@ -115,8 +115,8 @@ file has at least 50,000 records, and prints coverage counts for the required fi
 Optional comment enrichment:
 ../.venv/bin/python enrich_comments.py --input applicant_data.json --output applicant_data.json --max-detail-pages 200 --delay 1
 
-The submitted JSON files include comments recovered from the first 200 public detail
-pages checked by enrich_comments.py. At submission time, comments are available for 85
+The submitted JSON files include comments recovered from the first 500 public detail
+pages checked by enrich_comments.py. At submission time, comments are available for 236
 records in both applicant_data.json and llm_extend_applicant_data.json.
 
 Systematic Cleaning Edge Cases:
@@ -129,7 +129,7 @@ Systematic Cleaning Edge Cases:
 - If the LLM output is partial, llm_clean.py keeps deterministic cleaned values for
   unprocessed rows and fills LLM fields with those fallback values so the JSON remains
   consistent.
-- The current local LLM run generated completed LLM standardization output for 6,525
+- The current local LLM run generated completed LLM standardization output for 6,625
   applicant records. llm_clean.py can continue from that point with --resume-llm, and the
   submitted llm_extend_applicant_data.json still contains standardized fields for all
   50,000 rows by combining available LLM output with deterministic fallback cleaning.
@@ -141,12 +141,3 @@ identify the result container CSS class or table row structure, and update _cand
 or _parse_entry() accordingly. The regex-based parser is intentionally conservative and may
 leave some fields as None when the source text is inconsistent. Those records still preserve
 raw_text for reproducibility.
-
-Submission Checklist:
-- Submit the SSH URL for the private GitHub repository named jhu_software_concepts.
-- Confirm module_2 in GitHub contains scrape.py, clean.py, llm_clean.py, validate.py,
-  applicant_data.json, llm_extend_applicant_data.json, requirements.txt, README.txt,
-  evidence/screenshot.jpg, evidence/robots_check.txt, and llm_hosting.
-- Zip the final module_2 folder and submit it through Canvas before the deadline.
-- Do not submit the local virtual environment or downloaded model file; those are
-  reproducible from requirements.txt and the llm_hosting setup.
