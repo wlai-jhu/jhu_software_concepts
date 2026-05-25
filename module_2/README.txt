@@ -68,6 +68,14 @@ Run:
 If Grad Cafe returns a temporary server error, increase retry/backoff settings:
 .venv/bin/python scrape.py --target 50000 --delay 5 --max-retries 5 --backoff 30 --output data/raw_applicant_data.json
 
+Resume options:
+- The scraper writes progress metadata next to the output file. For example,
+  data/raw_applicant_data.progress.json stores the last successful page and next page.
+- To automatically continue from the saved progress file:
+  .venv/bin/python scrape.py --target 50000 --delay 5 --max-retries 5 --backoff 30 --resume --output data/raw_applicant_data.json
+- To manually resume near a known stopping point:
+  .venv/bin/python scrape.py --target 50000 --delay 5 --max-retries 5 --backoff 30 --start-page 1200 --resume --output data/raw_applicant_data.json
+
 Run with local LLM standardization:
 cd llm_hosting
 ../../.venv/bin/python -m pip install -r requirements.txt

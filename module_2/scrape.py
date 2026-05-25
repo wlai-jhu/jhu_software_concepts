@@ -5,7 +5,7 @@ import ssl
 import time
 from html import unescape
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, Iterable, List, Optional, Set
 from urllib import parse, request, robotparser
 from urllib.error import HTTPError, URLError
 
@@ -37,6 +37,8 @@ class GradCafeScraper:
         use_selenium: bool = False,
         max_retries: int = DEFAULT_MAX_RETRIES,
         backoff_seconds: float = DEFAULT_BACKOFF_SECONDS,
+        start_page: int = 1,
+        resume: bool = False,
     ):
         self.target_records = target_records
         self.delay_seconds = delay_seconds
@@ -44,6 +46,9 @@ class GradCafeScraper:
         self.use_selenium = use_selenium
         self.max_retries = max_retries
         self.backoff_seconds = backoff_seconds
+        self.start_page = max(1, start_page)
+        self.resume = resume
+        self.progress_path = self.output_path.with_suffix(".progress.json")
         self.robot_parser = robotparser.RobotFileParser()
         self.robot_parser.set_url(parse.urljoin(BASE_URL, "/robots.txt"))
 
@@ -73,8 +78,12 @@ class GradCafeScraper:
             raise PermissionError("robots.txt does not permit scraping the configured Grad Cafe URL.")
 
         records: List[Dict[str, Optional[str]]] = []
-        seen_raw_entries = set()
-        page = 1
+        if self.resume:
+            records = self.load_existing_data()
+
+        seen_raw_entries = self._seen_raw_entries(records)
+        page = self._resume_page() if self.resume else self.start_page
+        print(f"Starting scrape at page {page} with {len(records)} existing records.")
 
         while len(records) < self.target_records:
             url = self.build_url(page=page)
@@ -85,6 +94,7 @@ class GradCafeScraper:
             except ScrapeStopError as exc:
                 print(f"{exc} Saving {len(records)} records collected so far.")
                 self.save_data(records)
+                self.save_progress(page=page, record_count=len(records))
                 break
 
             page_records = list(self._parse_page(html, url))
@@ -103,6 +113,7 @@ class GradCafeScraper:
 
             page += 1
             self.save_data(records)
+            self.save_progress(page=page - 1, record_count=len(records))
             time.sleep(self.delay_seconds)
 
         return records
@@ -111,6 +122,32 @@ class GradCafeScraper:
         """Save raw scraped records as valid JSON."""
         self.output_path.parent.mkdir(parents=True, exist_ok=True)
         self.output_path.write_text(json.dumps(records, indent=2), encoding="utf-8")
+
+    def load_existing_data(self) -> List[Dict[str, Optional[str]]]:
+        """Load existing output records for resume mode."""
+        if not self.output_path.exists():
+            return []
+        return json.loads(self.output_path.read_text(encoding="utf-8"))
+
+    def save_progress(self, page: int, record_count: int) -> None:
+        """Save the last successfully processed page for resume mode."""
+        progress = {
+            "last_successful_page": page,
+            "next_page": page + 1,
+            "record_count": record_count,
+            "output_path": str(self.output_path),
+        }
+        self.progress_path.write_text(json.dumps(progress, indent=2), encoding="utf-8")
+
+    def _resume_page(self) -> int:
+        if self.progress_path.exists():
+            progress = json.loads(self.progress_path.read_text(encoding="utf-8"))
+            next_page = int(progress.get("next_page", self.start_page))
+            return max(self.start_page, next_page)
+        return self.start_page
+
+    def _seen_raw_entries(self, records: List[Dict[str, Optional[str]]]) -> Set[str]:
+        return {record.get("raw_text") or "" for record in records if record.get("raw_text")}
 
     def _request_text(self, url: str) -> str:
         req = request.Request(url, headers={"User-Agent": USER_AGENT})
@@ -400,6 +437,8 @@ def main() -> None:
     parser.add_argument("--check-robots-only", action="store_true")
     parser.add_argument("--max-retries", type=int, default=DEFAULT_MAX_RETRIES)
     parser.add_argument("--backoff", type=float, default=DEFAULT_BACKOFF_SECONDS)
+    parser.add_argument("--start-page", type=int, default=1)
+    parser.add_argument("--resume", action="store_true")
     args = parser.parse_args()
 
     scraper = GradCafeScraper(
@@ -409,6 +448,8 @@ def main() -> None:
         use_selenium=args.selenium,
         max_retries=args.max_retries,
         backoff_seconds=args.backoff,
+        start_page=args.start_page,
+        resume=args.resume,
     )
 
     allowed = scraper.check_robots()
