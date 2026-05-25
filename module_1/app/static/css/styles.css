@@ -157,6 +157,18 @@ p {
     font-weight: 700;
 }
 
+.project-item {
+    padding-top: 26px;
+    margin-top: 26px;
+    border-top: 1px solid var(--line);
+}
+
+.project-item h2 {
+    margin-bottom: 14px;
+    color: var(--blue-dark);
+    font-size: 1.35rem;
+}
+
 .image-panel {
     display: grid;
     justify-items: center;

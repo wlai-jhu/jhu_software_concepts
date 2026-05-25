@@ -5,21 +5,45 @@
 {% block content %}
 <section class="content-section">
     <p class="eyebrow">Projects</p>
-    <h1>Module 1 Flask Portfolio Website</h1>
+    <h1>Course Projects</h1>
     <p class="project-meta">Johns Hopkins Modern Software Concepts in Python</p>
-    <p>
-        This Module 1 project is a Flask web application that presents a personal homepage,
-        contact information, and project details. It uses templates, static CSS, a shared
-        navigation bar, and a Flask blueprint to organize the site pages.
-    </p>
-    <p>
-        The project demonstrates basic Python web development, local server execution,
-        route organization, HTML templates, and page styling with CSS.
-    </p>
-    <div class="project-links">
-        <a href="https://github.com/wlai-jhu/jhu_software_concepts" target="_blank" rel="noopener">
-            View Module 1 GitHub Repository
-        </a>
-    </div>
+
+    <article class="project-item">
+        <h2>Module 1 Flask Portfolio Website</h2>
+        <p>
+            This project is a Flask web application that presents a personal homepage,
+            contact information, and project details. It uses templates, static CSS, a shared
+            navigation bar, and a Flask blueprint to organize the site pages.
+        </p>
+        <p>
+            The project demonstrates basic Python web development, local server execution,
+            route organization, HTML templates, and page styling with CSS.
+        </p>
+        <div class="project-links">
+            <a href="https://github.com/wlai-jhu/jhu_software_concepts/tree/main/module_1" target="_blank" rel="noopener">
+                View Module 1 GitHub Folder
+            </a>
+        </div>
+    </article>
+
+    <article class="project-item">
+        <h2>Module 2 Grad Cafe Web Scraper</h2>
+        <p>
+            This project builds a Python web scraping pipeline for publicly available Grad Cafe
+            applicant data. It checks robots.txt, constructs URLs with urllib, parses rendered
+            applicant listings with BeautifulSoup and regex, and stores structured applicant
+            records as JSON.
+        </p>
+        <p>
+            The scraper is designed to collect 50,000 applicant records, preserve raw listing
+            text for traceability, and clean program and university names using the local LLM
+            standardization package provided with the assignment.
+        </p>
+        <div class="project-links">
+            <a href="https://github.com/wlai-jhu/jhu_software_concepts/tree/main/module_2" target="_blank" rel="noopener">
+                View Module 2 GitHub Folder
+            </a>
+        </div>
+    </article>
 </section>
 {% endblock %}
