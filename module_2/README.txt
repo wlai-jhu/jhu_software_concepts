@@ -115,10 +115,10 @@ Systematic Cleaning Edge Cases:
 - If the LLM output is partial, llm_clean.py keeps deterministic cleaned values for
   unprocessed rows and fills LLM fields with those fallback values so the JSON remains
   consistent.
-- The current local LLM run generated data/llm_output.jsonl for a subset of records before
-  interruption. llm_clean.py can resume with --resume-llm, and the submitted
-  llm_extend_applicant_data.json still contains standardized fields for all 50,000 rows by
-  combining available LLM output with deterministic fallback cleaning.
+- The current local LLM run generated completed LLM standardization output for 5,486
+  applicant records. llm_clean.py can continue from that point with --resume-llm, and the
+  submitted llm_extend_applicant_data.json still contains standardized fields for all
+  50,000 rows by combining available LLM output with deterministic fallback cleaning.
 
 Known Bugs:
 Grad Cafe page structure may change, so the selectors in scrape.py may need adjustment if
