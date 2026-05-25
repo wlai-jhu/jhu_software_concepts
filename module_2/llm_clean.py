@@ -3,13 +3,13 @@ import json
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set
 
 from clean import clean_data, load_data, save_data
 
 
 DEFAULT_INPUT_PATH = "data/raw_applicant_data.json"
-DEFAULT_OUTPUT_PATH = "applicant_data.json"
+DEFAULT_OUTPUT_PATH = "llm_extend_applicant_data.json"
 DEFAULT_LLM_INPUT_PATH = "data/llm_input.json"
 DEFAULT_LLM_OUTPUT_PATH = "data/llm_output.jsonl"
 LLM_APP_PATH = Path("llm_hosting/app.py")
@@ -18,10 +18,15 @@ LLM_APP_PATH = Path("llm_hosting/app.py")
 def prepare_llm_input(
     records: List[Dict[str, Optional[str]]],
     llm_input_path: str = DEFAULT_LLM_INPUT_PATH,
+    llm_output_path: str = DEFAULT_LLM_OUTPUT_PATH,
+    resume: bool = False,
 ) -> None:
     """Create the JSON format expected by llm_hosting/app.py."""
+    completed_indexes = _completed_llm_indexes(llm_output_path) if resume else set()
     rows = []
     for index, record in enumerate(records):
+        if index in completed_indexes:
+            continue
         program = record.get("program_name") or ""
         university = record.get("university") or ""
         combined_program = ", ".join(part for part in [program, university] if part)
@@ -41,6 +46,7 @@ def prepare_llm_input(
 def run_llm_standardizer(
     llm_input_path: str = DEFAULT_LLM_INPUT_PATH,
     llm_output_path: str = DEFAULT_LLM_OUTPUT_PATH,
+    append: bool = False,
 ) -> None:
     """Run the assignment-provided local LLM standardizer."""
     if not LLM_APP_PATH.exists():
@@ -55,6 +61,8 @@ def run_llm_standardizer(
         "--out",
         llm_output_path,
     ]
+    if append:
+        command.append("--append")
     try:
         subprocess.run(command, check=True)
     except subprocess.CalledProcessError as exc:
@@ -71,6 +79,8 @@ def merge_llm_output(
 ) -> List[Dict[str, Optional[str]]]:
     """Merge JSONL LLM output back into scraper records by record_index."""
     merged = [dict(record) for record in records]
+    if not Path(llm_output_path).exists():
+        return merged
     with Path(llm_output_path).open("r", encoding="utf-8") as file:
         for line in file:
             if not line.strip():
@@ -84,24 +94,49 @@ def merge_llm_output(
     return merged
 
 
+def _completed_llm_indexes(llm_output_path: str = DEFAULT_LLM_OUTPUT_PATH) -> Set[int]:
+    """Read completed record indexes from an existing JSONL output file."""
+    completed: Set[int] = set()
+    path = Path(llm_output_path)
+    if not path.exists():
+        return completed
+    with path.open("r", encoding="utf-8") as file:
+        for line in file:
+            if not line.strip():
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            index = row.get("record_index")
+            if isinstance(index, int):
+                completed.add(index)
+    return completed
+
+
 def clean_data_with_llm(
     input_path: str = DEFAULT_INPUT_PATH,
     output_path: str = DEFAULT_OUTPUT_PATH,
     skip_llm_run: bool = False,
+    resume_llm: bool = False,
 ) -> List[Dict[str, Optional[str]]]:
-    """Run local LLM standardization, merge results, and save applicant_data.json."""
+    """Run local LLM standardization, merge results, and save extended applicant data."""
     records = load_data(input_path)
-    prepare_llm_input(records)
+    prepare_llm_input(records, resume=resume_llm)
     if not skip_llm_run:
-        run_llm_standardizer()
+        run_llm_standardizer(append=resume_llm)
     merged_records = merge_llm_output(records)
     cleaned_records = clean_data(merged_records)
 
     for record in cleaned_records:
         if record.get("llm_generated_program"):
             record["program_name_cleaned"] = record["llm_generated_program"]
+        elif not record.get("llm_generated_program"):
+            record["llm_generated_program"] = record.get("program_name_cleaned")
         if record.get("llm_generated_university"):
             record["university_cleaned"] = record["llm_generated_university"]
+        elif not record.get("llm_generated_university"):
+            record["llm_generated_university"] = record.get("university_cleaned")
 
     save_data(cleaned_records, output_path)
     return cleaned_records
@@ -116,12 +151,18 @@ def main() -> None:
         action="store_true",
         help="Merge an existing data/llm_output.jsonl instead of running the model again.",
     )
+    parser.add_argument(
+        "--resume-llm",
+        action="store_true",
+        help="Skip already completed record indexes in data/llm_output.jsonl and append new LLM output.",
+    )
     args = parser.parse_args()
 
     records = clean_data_with_llm(
         input_path=args.input,
         output_path=args.output,
         skip_llm_run=args.skip_llm_run,
+        resume_llm=args.resume_llm,
     )
     print(f"Saved {len(records)} LLM-cleaned records to {args.output}")
 

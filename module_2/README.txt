@@ -39,8 +39,8 @@ module_2/llm_hosting
 The integration wrapper is implemented in llm_clean.py. It converts scraped records into
 the input format expected by llm_hosting/app.py, runs the local LLM command line interface,
 reads the JSONL output, merges llm_generated_program and llm_generated_university back
-into the applicant records, and writes applicant_data.json. The original program_name,
-university, and raw_text fields are preserved for traceability.
+into the applicant records, and writes llm_extend_applicant_data.json. The original
+program_name, university, and raw_text fields are preserved for traceability.
 
 Robots.txt Evidence:
 Before scraping, run:
@@ -61,6 +61,9 @@ Install:
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 
+The top-level requirements.txt also installs the local LLM package dependencies listed
+in llm_hosting/requirements.txt.
+
 Run:
 .venv/bin/python scrape.py --target 50000 --delay 3 --output data/raw_applicant_data.json
 .venv/bin/python clean.py --input data/raw_applicant_data.json --output applicant_data.json
@@ -80,11 +83,28 @@ Run with local LLM standardization:
 cd llm_hosting
 ../../.venv/bin/python -m pip install -r requirements.txt
 cd ..
-../.venv/bin/python llm_clean.py --input data/raw_applicant_data.json --output applicant_data.json
+../.venv/bin/python llm_clean.py --input data/raw_applicant_data.json --output llm_extend_applicant_data.json
 
 The LLM workflow writes intermediate files to:
 data/llm_input.json
 data/llm_output.jsonl
+
+If the local LLM process is interrupted, resume it without reprocessing completed rows:
+../.venv/bin/python llm_clean.py --input data/raw_applicant_data.json --output llm_extend_applicant_data.json --resume-llm
+
+Systematic Cleaning Edge Cases:
+- Some Grad Cafe rows do not expose comments in the survey table view, so comments may be
+  None even though a detail page could contain more discussion.
+- Some school names are user-entered or abbreviated, and the tiny local LLM occasionally
+  introduces capitalization or accent artifacts. The final JSON preserves original
+  program_name, university, and raw_text fields so these cases can be traced and improved.
+- If the LLM output is partial, llm_clean.py keeps deterministic cleaned values for
+  unprocessed rows and fills LLM fields with those fallback values so the JSON remains
+  consistent.
+- The current local LLM run generated data/llm_output.jsonl for a subset of records before
+  interruption. llm_clean.py can resume with --resume-llm, and the submitted
+  llm_extend_applicant_data.json still contains standardized fields for all 50,000 rows by
+  combining available LLM output with deterministic fallback cleaning.
 
 Known Bugs:
 Grad Cafe page structure may change, so the selectors in scrape.py may need adjustment if

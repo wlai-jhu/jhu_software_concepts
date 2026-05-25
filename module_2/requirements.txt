@@ -2,5 +2,5 @@ beautifulsoup4
 certifi
 selenium
 
-# Optional local LLM standardizer dependencies are listed in:
-# module_2/llm_hosting/requirements.txt
+# Local LLM standardizer dependencies.
+-r llm_hosting/requirements.txt
