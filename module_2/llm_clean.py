@@ -47,17 +47,22 @@ def run_llm_standardizer(
         raise FileNotFoundError("Expected module_2/llm_hosting/app.py to exist.")
 
     Path(llm_output_path).parent.mkdir(parents=True, exist_ok=True)
-    subprocess.run(
-        [
-            sys.executable,
-            str(LLM_APP_PATH),
-            "--file",
-            llm_input_path,
-            "--out",
-            llm_output_path,
-        ],
-        check=True,
-    )
+    command = [
+        sys.executable,
+        str(LLM_APP_PATH),
+        "--file",
+        llm_input_path,
+        "--out",
+        llm_output_path,
+    ]
+    try:
+        subprocess.run(command, check=True)
+    except subprocess.CalledProcessError as exc:
+        install_command = f"{sys.executable} -m pip install -r llm_hosting/requirements.txt"
+        raise RuntimeError(
+            "The local LLM standardizer failed. If the error mentions a missing module "
+            f"such as Flask, huggingface_hub, or llama_cpp, run: {install_command}"
+        ) from exc
 
 
 def merge_llm_output(
