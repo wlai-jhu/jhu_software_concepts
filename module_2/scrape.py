@@ -17,7 +17,13 @@ BASE_URL = "https://www.thegradcafe.com"
 DEFAULT_RESULTS_PATH = "/survey/"
 DEFAULT_TARGET_RECORDS = 50000
 DEFAULT_DELAY_SECONDS = 3.0
+DEFAULT_MAX_RETRIES = 3
+DEFAULT_BACKOFF_SECONDS = 10.0
 USER_AGENT = "jhu-software-concepts-module-2/1.0"
+
+
+class ScrapeStopError(RuntimeError):
+    """Raised when the scraper should stop politely and keep partial results."""
 
 
 class GradCafeScraper:
@@ -29,11 +35,15 @@ class GradCafeScraper:
         delay_seconds: float = DEFAULT_DELAY_SECONDS,
         output_path: str = "data/raw_applicant_data.json",
         use_selenium: bool = False,
+        max_retries: int = DEFAULT_MAX_RETRIES,
+        backoff_seconds: float = DEFAULT_BACKOFF_SECONDS,
     ):
         self.target_records = target_records
         self.delay_seconds = delay_seconds
         self.output_path = Path(output_path)
         self.use_selenium = use_selenium
+        self.max_retries = max_retries
+        self.backoff_seconds = backoff_seconds
         self.robot_parser = robotparser.RobotFileParser()
         self.robot_parser.set_url(parse.urljoin(BASE_URL, "/robots.txt"))
 
@@ -70,7 +80,13 @@ class GradCafeScraper:
             url = self.build_url(page=page)
             print(f"Fetching page {page}: {url}")
 
-            html = self._get_rendered_html(url) if self.use_selenium else self._request_text(url)
+            try:
+                html = self._get_rendered_html(url) if self.use_selenium else self._request_text(url)
+            except ScrapeStopError as exc:
+                print(f"{exc} Saving {len(records)} records collected so far.")
+                self.save_data(records)
+                break
+
             page_records = list(self._parse_page(html, url))
 
             if not page_records:
@@ -86,6 +102,7 @@ class GradCafeScraper:
                     break
 
             page += 1
+            self.save_data(records)
             time.sleep(self.delay_seconds)
 
         return records
@@ -97,19 +114,48 @@ class GradCafeScraper:
 
     def _request_text(self, url: str) -> str:
         req = request.Request(url, headers={"User-Agent": USER_AGENT})
-        try:
-            context = ssl.create_default_context(cafile=certifi.where())
-            with request.urlopen(req, timeout=30, context=context) as response:
-                status_code = getattr(response, "status", 200)
-                if status_code in {403, 429} or status_code >= 500:
-                    raise RuntimeError(f"Stopping because the site returned HTTP {status_code}.")
-                return response.read().decode("utf-8", errors="replace")
-        except HTTPError as exc:
-            if exc.code in {403, 429} or exc.code >= 500:
-                raise RuntimeError(f"Stopping because the site returned HTTP {exc.code}.") from exc
-            raise
-        except URLError as exc:
-            raise RuntimeError(f"Could not request {url}: {exc}") from exc
+        context = ssl.create_default_context(cafile=certifi.where())
+        last_error: Optional[BaseException] = None
+
+        for attempt in range(1, self.max_retries + 1):
+            try:
+                with request.urlopen(req, timeout=30, context=context) as response:
+                    status_code = getattr(response, "status", 200)
+                    if status_code in {403, 429}:
+                        raise ScrapeStopError(f"Stopping because the site returned HTTP {status_code}.")
+                    if status_code >= 500:
+                        raise HTTPError(url, status_code, "Server error", response.headers, None)
+                    return response.read().decode("utf-8", errors="replace")
+            except HTTPError as exc:
+                last_error = exc
+                if exc.code in {403, 429}:
+                    raise ScrapeStopError(f"Stopping because the site returned HTTP {exc.code}.") from exc
+                if exc.code >= 500:
+                    if attempt < self.max_retries:
+                        self._sleep_before_retry(url, attempt, exc.code)
+                        continue
+                    raise ScrapeStopError(
+                        f"Stopping after {self.max_retries} attempts because the site returned HTTP {exc.code}."
+                    ) from exc
+                raise
+            except URLError as exc:
+                last_error = exc
+                if attempt < self.max_retries:
+                    self._sleep_before_retry(url, attempt, "network error")
+                    continue
+                raise ScrapeStopError(
+                    f"Stopping after {self.max_retries} attempts because the request failed: {exc}."
+                ) from exc
+
+        raise ScrapeStopError(f"Stopping after repeated request failures: {last_error}")
+
+    def _sleep_before_retry(self, url: str, attempt: int, reason) -> None:
+        wait_seconds = self.backoff_seconds * attempt
+        print(
+            f"Request failed for {url} ({reason}); retry {attempt + 1}/{self.max_retries} "
+            f"after {wait_seconds:.1f} seconds."
+        )
+        time.sleep(wait_seconds)
 
     def _get_rendered_html(self, url: str) -> str:
         from selenium import webdriver
@@ -352,6 +398,8 @@ def main() -> None:
     parser.add_argument("--output", default="data/raw_applicant_data.json")
     parser.add_argument("--selenium", action="store_true")
     parser.add_argument("--check-robots-only", action="store_true")
+    parser.add_argument("--max-retries", type=int, default=DEFAULT_MAX_RETRIES)
+    parser.add_argument("--backoff", type=float, default=DEFAULT_BACKOFF_SECONDS)
     args = parser.parse_args()
 
     scraper = GradCafeScraper(
@@ -359,6 +407,8 @@ def main() -> None:
         delay_seconds=args.delay,
         output_path=args.output,
         use_selenium=args.selenium,
+        max_retries=args.max_retries,
+        backoff_seconds=args.backoff,
     )
 
     allowed = scraper.check_robots()

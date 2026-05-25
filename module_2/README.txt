@@ -18,7 +18,9 @@ preserve the original raw listing text, and extract structured fields such as pr
 university, status, decision dates, term, student origin, GRE metrics, GPA, degree, comments,
 and source URL. The scraper includes a configurable delay between page requests and stops
 if the site returns blocking, rate-limit, or server rejection status codes such as 403, 429,
-or 5xx.
+or repeated 5xx responses. Transient server errors such as HTTP 522 are retried with
+configurable backoff. The scraper saves checkpoint output after each successfully parsed
+page so partial progress is preserved if the site later rejects or times out.
 
 The scraper can also use Selenium as an optional rendering tool if Grad Cafe pages require
 browser rendering. Selenium is controlled by passing --selenium when running scrape.py.
@@ -62,6 +64,9 @@ python3 -m venv .venv
 Run:
 .venv/bin/python scrape.py --target 50000 --delay 3 --output data/raw_applicant_data.json
 .venv/bin/python clean.py --input data/raw_applicant_data.json --output applicant_data.json
+
+If Grad Cafe returns a temporary server error, increase retry/backoff settings:
+.venv/bin/python scrape.py --target 50000 --delay 5 --max-retries 5 --backoff 30 --output data/raw_applicant_data.json
 
 Run with local LLM standardization:
 cd llm_hosting
