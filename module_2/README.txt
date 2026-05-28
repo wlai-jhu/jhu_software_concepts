@@ -79,6 +79,19 @@ Run:
 .venv/bin/python scrape.py --target 50000 --delay 3 --output data/raw_applicant_data.json
 .venv/bin/python clean.py --input data/raw_applicant_data.json --output applicant_data.json
 
+By default, scrape.py fetches 16 public survey pages at the same time, then parses and
+saves results in page order so the JSON output stays deterministic. The --parallel-pages
+option can lower or raise the number of concurrent survey pages. The scraper still checks
+robots.txt before scraping, saves progress after each batch, applies retry and backoff
+behavior, and stops if the site blocks, rate-limits, or rejects requests. Selenium mode
+stays single-page because launching many browser instances at once would be less polite
+and less reliable.
+
+The scraper also removes duplicate applicant records before saving. It treats the public
+/result/ entry URL as the stable record key when available and falls back to raw_text when
+an entry URL is unavailable. If duplicates are skipped during a run, scraping continues
+until the target number of unique records is reached or the site asks the scraper to stop.
+
 If Grad Cafe returns a temporary server error, increase retry/backoff settings:
 .venv/bin/python scrape.py --target 50000 --delay 5 --max-retries 5 --backoff 30 --output data/raw_applicant_data.json
 
@@ -114,6 +127,15 @@ file has at least 50,000 records, and prints coverage counts for the required fi
 
 Optional comment enrichment:
 ../.venv/bin/python enrich_comments.py --input applicant_data.json --output applicant_data.json --max-detail-pages 200 --delay 1
+
+To check every applicant detail page for comments when available:
+../.venv/bin/python enrich_comments.py --input applicant_data_parallel.json --output applicant_data_parallel.json --all-records --parallel-pages 16 --delay 1 --save-every 25 --progress data/comment_enrichment_parallel.progress.json
+
+The all-records run checks each public /result/ page that does not already have a comment.
+By default it fetches 16 public detail pages at a time, updates comments from the public
+admission notes field when available, writes progress to the selected progress JSON file,
+and checkpoints the output JSON every 25 checked detail pages. The command is designed to
+be interrupted and resumed with --resume using the same --progress path.
 
 The submitted JSON files include comments recovered from the first 500 public detail
 pages checked by enrich_comments.py. At submission time, comments are available for 236

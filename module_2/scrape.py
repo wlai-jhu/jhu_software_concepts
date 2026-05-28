@@ -3,9 +3,10 @@ import json
 import re
 import ssl
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from html import unescape
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Set
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 from urllib import parse, request, robotparser
 from urllib.error import HTTPError, URLError
 
@@ -19,6 +20,7 @@ DEFAULT_TARGET_RECORDS = 50000
 DEFAULT_DELAY_SECONDS = 3.0
 DEFAULT_MAX_RETRIES = 3
 DEFAULT_BACKOFF_SECONDS = 10.0
+DEFAULT_PARALLEL_PAGES = 16
 USER_AGENT = "jhu-software-concepts-module-2/1.0"
 
 
@@ -39,6 +41,7 @@ class GradCafeScraper:
         backoff_seconds: float = DEFAULT_BACKOFF_SECONDS,
         start_page: int = 1,
         resume: bool = False,
+        parallel_pages: int = DEFAULT_PARALLEL_PAGES,
     ):
         self.target_records = target_records
         self.delay_seconds = delay_seconds
@@ -48,6 +51,7 @@ class GradCafeScraper:
         self.backoff_seconds = backoff_seconds
         self.start_page = max(1, start_page)
         self.resume = resume
+        self.parallel_pages = max(1, parallel_pages)
         self.progress_path = self.output_path.with_suffix(".progress.json")
         self.robot_parser = robotparser.RobotFileParser()
         self.robot_parser.set_url(parse.urljoin(BASE_URL, "/robots.txt"))
@@ -79,41 +83,52 @@ class GradCafeScraper:
 
         records: List[Dict[str, Optional[str]]] = []
         if self.resume:
-            records = self.load_existing_data()
+            records = self._deduplicate_records(self.load_existing_data())
 
-        seen_raw_entries = self._seen_raw_entries(records)
+        seen_record_keys = self._seen_record_keys(records)
         page = self._resume_page() if self.resume else self.start_page
         print(f"Starting scrape at page {page} with {len(records)} existing records.")
 
         while len(records) < self.target_records:
-            url = self.build_url(page=page)
-            print(f"Fetching page {page}: {url}")
+            batch_size = self.parallel_pages if not self.use_selenium else 1
+            batch_pages = list(range(page, page + batch_size))
+            print(f"Fetching pages {batch_pages[0]}-{batch_pages[-1]} with {batch_size} worker(s).")
 
             try:
-                html = self._get_rendered_html(url) if self.use_selenium else self._request_text(url)
+                batch_results = self._fetch_page_batch(batch_pages)
             except ScrapeStopError as exc:
                 print(f"{exc} Saving {len(records)} records collected so far.")
                 self.save_data(records)
-                self.save_progress(page=page, record_count=len(records))
+                self.save_progress(page=page - 1, record_count=len(records))
                 break
 
-            page_records = list(self._parse_page(html, url))
+            processed_any_records = False
+            last_processed_page = page - 1
+            for result_page, page_records in batch_results:
+                if not page_records:
+                    print(f"No applicant records found on page {result_page}; stopping.")
+                    self.save_data(records)
+                    self.save_progress(page=last_processed_page, record_count=len(records))
+                    return records
 
-            if not page_records:
-                print("No applicant records found on this page; stopping.")
-                break
-
-            for record in page_records:
-                raw_text = record.get("raw_text") or ""
-                if raw_text and raw_text not in seen_raw_entries:
-                    records.append(record)
-                    seen_raw_entries.add(raw_text)
+                processed_any_records = True
+                last_processed_page = result_page
+                for record in page_records:
+                    record_keys = self._record_keys(record)
+                    if record_keys and not seen_record_keys.intersection(record_keys):
+                        records.append(record)
+                        seen_record_keys.update(record_keys)
+                    if len(records) >= self.target_records:
+                        break
                 if len(records) >= self.target_records:
                     break
 
-            page += 1
+            if not processed_any_records:
+                break
+
+            page = last_processed_page + 1
             self.save_data(records)
-            self.save_progress(page=page - 1, record_count=len(records))
+            self.save_progress(page=last_processed_page, record_count=len(records))
             time.sleep(self.delay_seconds)
 
         return records
@@ -121,7 +136,8 @@ class GradCafeScraper:
     def save_data(self, records: List[Dict[str, Optional[str]]]) -> None:
         """Save raw scraped records as valid JSON."""
         self.output_path.parent.mkdir(parents=True, exist_ok=True)
-        self.output_path.write_text(json.dumps(records, indent=2), encoding="utf-8")
+        unique_records = self._deduplicate_records(records)
+        self.output_path.write_text(json.dumps(unique_records, indent=2), encoding="utf-8")
 
     def load_existing_data(self) -> List[Dict[str, Optional[str]]]:
         """Load existing output records for resume mode."""
@@ -139,6 +155,24 @@ class GradCafeScraper:
         }
         self.progress_path.write_text(json.dumps(progress, indent=2), encoding="utf-8")
 
+    def _fetch_page_batch(self, pages: List[int]) -> List[Tuple[int, List[Dict[str, Optional[str]]]]]:
+        if len(pages) == 1:
+            return [self._fetch_page_records(pages[0])]
+
+        results: Dict[int, List[Dict[str, Optional[str]]]] = {}
+        with ThreadPoolExecutor(max_workers=len(pages)) as executor:
+            futures = {executor.submit(self._fetch_page_records, page): page for page in pages}
+            for future in as_completed(futures):
+                result_page, page_records = future.result()
+                results[result_page] = page_records
+        return [(page, results[page]) for page in sorted(results)]
+
+    def _fetch_page_records(self, page: int) -> Tuple[int, List[Dict[str, Optional[str]]]]:
+        url = self.build_url(page=page)
+        print(f"Fetching page {page}: {url}")
+        html = self._get_rendered_html(url) if self.use_selenium else self._request_text(url)
+        return page, list(self._parse_page(html, url))
+
     def _resume_page(self) -> int:
         if self.progress_path.exists():
             progress = json.loads(self.progress_path.read_text(encoding="utf-8"))
@@ -146,8 +180,84 @@ class GradCafeScraper:
             return max(self.start_page, next_page)
         return self.start_page
 
-    def _seen_raw_entries(self, records: List[Dict[str, Optional[str]]]) -> Set[str]:
-        return {record.get("raw_text") or "" for record in records if record.get("raw_text")}
+    def _seen_record_keys(self, records: List[Dict[str, Optional[str]]]) -> Set[str]:
+        seen_record_keys: Set[str] = set()
+        for record in records:
+            seen_record_keys.update(self._record_keys(record))
+        return seen_record_keys
+
+    def _record_keys(self, record: Dict[str, Optional[str]]) -> Set[str]:
+        keys: Set[str] = set()
+        entry_url = record.get("entry_url")
+        if entry_url and "/result/" in entry_url:
+            keys.add(f"url:{entry_url}")
+
+        signature = self._record_signature(record)
+        if signature:
+            keys.add(f"sig:{signature}")
+
+        raw_text = record.get("raw_text")
+        if raw_text:
+            keys.add(f"raw:{self._normalize_duplicate_value(raw_text)}")
+        return keys
+
+    def _record_signature(self, record: Dict[str, Optional[str]]) -> Optional[str]:
+        """Build a conservative normalized fingerprint for re-entered applicant rows."""
+        normalized = {
+            "university": self._normalize_duplicate_value(record.get("university")),
+            "program_name": self._normalize_duplicate_value(record.get("program_name")),
+            "applicant_status": self._normalize_duplicate_value(record.get("applicant_status")),
+            "acceptance_date": self._normalize_duplicate_value(record.get("acceptance_date")),
+            "rejection_date": self._normalize_duplicate_value(record.get("rejection_date")),
+            "term": self._normalize_duplicate_value(record.get("term")),
+            "degree": self._normalize_duplicate_value(record.get("degree")),
+            "student_origin": self._normalize_duplicate_value(record.get("student_origin")),
+            "gpa": self._normalize_duplicate_value(record.get("gpa")),
+            "gre_score": self._normalize_duplicate_value(record.get("gre_score")),
+            "gre_v_score": self._normalize_duplicate_value(record.get("gre_v_score")),
+            "gre_aw": self._normalize_duplicate_value(record.get("gre_aw")),
+        }
+
+        required_fields = ["university", "program_name", "applicant_status", "term"]
+        if any(not normalized[field] for field in required_fields):
+            return None
+
+        academic_metric_fields = ["gpa", "gre_score", "gre_v_score", "gre_aw"]
+        if not any(normalized[field] for field in academic_metric_fields):
+            return None
+
+        ordered_fields = required_fields + [
+            "acceptance_date",
+            "rejection_date",
+            "degree",
+            "student_origin",
+            "gpa",
+            "gre_score",
+            "gre_v_score",
+            "gre_aw",
+        ]
+        return "|".join(normalized[field] or "" for field in ordered_fields)
+
+    def _normalize_duplicate_value(self, value: Optional[str]) -> str:
+        if value is None:
+            return ""
+        text = unescape(str(value)).lower()
+        text = re.sub(r"[^a-z0-9.]+", " ", text)
+        return re.sub(r"\s+", " ", text).strip()
+
+    def _deduplicate_records(
+        self,
+        records: List[Dict[str, Optional[str]]],
+    ) -> List[Dict[str, Optional[str]]]:
+        unique_records = []
+        seen_record_keys: Set[str] = set()
+        for record in records:
+            record_keys = self._record_keys(record)
+            if record_keys and seen_record_keys.intersection(record_keys):
+                continue
+            seen_record_keys.update(record_keys)
+            unique_records.append(record)
+        return unique_records
 
     def _request_text(self, url: str) -> str:
         req = request.Request(url, headers={"User-Agent": USER_AGENT})
@@ -441,6 +551,12 @@ def main() -> None:
     parser.add_argument("--backoff", type=float, default=DEFAULT_BACKOFF_SECONDS)
     parser.add_argument("--start-page", type=int, default=1)
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument(
+        "--parallel-pages",
+        type=int,
+        default=DEFAULT_PARALLEL_PAGES,
+        help="Fetch this many survey pages concurrently.",
+    )
     args = parser.parse_args()
 
     scraper = GradCafeScraper(
@@ -452,6 +568,7 @@ def main() -> None:
         backoff_seconds=args.backoff,
         start_page=args.start_page,
         resume=args.resume,
+        parallel_pages=args.parallel_pages,
     )
 
     allowed = scraper.check_robots()
