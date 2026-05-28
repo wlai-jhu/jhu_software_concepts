@@ -164,7 +164,8 @@ Systematic Cleaning Edge Cases:
   program_name, university, and raw_text fields so these cases can be traced and improved.
 - If the LLM output is partial, llm_clean.py keeps deterministic cleaned values for
   unprocessed rows and fills LLM fields with those fallback values so the JSON remains
-  consistent.
+  consistent. This means every submitted row has standardized program and university
+  fields, even when the local LLM did not finish processing that exact row.
 - The current local LLM run generated completed LLM standardization output for 7,625
   applicant records. llm_clean.py can continue from that point with --resume-llm, and the
   submitted llm_extend_applicant_data.json still contains standardized fields for all
