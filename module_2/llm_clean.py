@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -12,7 +13,10 @@ DEFAULT_INPUT_PATH = "data/raw_applicant_data.json"
 DEFAULT_OUTPUT_PATH = "llm_extend_applicant_data.json"
 DEFAULT_LLM_INPUT_PATH = "data/llm_input.json"
 DEFAULT_LLM_OUTPUT_PATH = "data/llm_output.jsonl"
-LLM_APP_PATH = Path("llm_hosting/app.py")
+MODULE_DIR = Path(__file__).resolve().parent
+LLM_APP_PATH = MODULE_DIR / "llm_hosting/app.py"
+CANON_UNIS_PATH = MODULE_DIR / "llm_hosting/canon_universities.txt"
+CANON_PROGS_PATH = MODULE_DIR / "llm_hosting/canon_programs.txt"
 
 
 def prepare_llm_input(
@@ -67,7 +71,10 @@ def run_llm_standardizer(
     if append:
         command.append("--append")
     try:
-        subprocess.run(command, check=True)
+        env = os.environ.copy()
+        env["CANON_UNIS_PATH"] = str(CANON_UNIS_PATH)
+        env["CANON_PROGS_PATH"] = str(CANON_PROGS_PATH)
+        subprocess.run(command, check=True, env=env)
     except subprocess.CalledProcessError as exc:
         install_command = f"{sys.executable} -m pip install -r llm_hosting/requirements.txt"
         raise RuntimeError(

@@ -22,6 +22,7 @@ DEFAULT_MAX_RETRIES = 3
 DEFAULT_BACKOFF_SECONDS = 10.0
 DEFAULT_PARALLEL_PAGES = 16
 USER_AGENT = "jhu-software-concepts-module-2/1.0"
+DEFAULT_OUTPUT_PATH = "data/raw_applicant_data.json"
 
 
 class ScrapeStopError(RuntimeError):
@@ -35,7 +36,7 @@ class GradCafeScraper:
         self,
         target_records: int = DEFAULT_TARGET_RECORDS,
         delay_seconds: float = DEFAULT_DELAY_SECONDS,
-        output_path: str = "data/raw_applicant_data.json",
+        output_path: str = DEFAULT_OUTPUT_PATH,
         use_selenium: bool = False,
         max_retries: int = DEFAULT_MAX_RETRIES,
         backoff_seconds: float = DEFAULT_BACKOFF_SECONDS,
@@ -532,11 +533,11 @@ def scrape_data(target_records: int = DEFAULT_TARGET_RECORDS, use_selenium: bool
     return scraper.scrape_data()
 
 
-def save_data(records: List[Dict[str, Optional[str]]], output_path: str = "data/raw_applicant_data.json") -> None:
+def save_data(records: List[Dict[str, Optional[str]]], output_path: str = DEFAULT_OUTPUT_PATH) -> None:
     GradCafeScraper(output_path=output_path).save_data(records)
 
 
-def load_data(input_path: str = "data/raw_applicant_data.json") -> List[Dict[str, Optional[str]]]:
+def load_data(input_path: str = DEFAULT_OUTPUT_PATH) -> List[Dict[str, Optional[str]]]:
     return json.loads(Path(input_path).read_text(encoding="utf-8"))
 
 
@@ -544,7 +545,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Scrape public Grad Cafe applicant data.")
     parser.add_argument("--target", type=int, default=DEFAULT_TARGET_RECORDS)
     parser.add_argument("--delay", type=float, default=DEFAULT_DELAY_SECONDS)
-    parser.add_argument("--output", default="data/raw_applicant_data.json")
+    parser.add_argument("--output", default=DEFAULT_OUTPUT_PATH)
     parser.add_argument("--selenium", action="store_true")
     parser.add_argument("--check-robots-only", action="store_true")
     parser.add_argument("--max-retries", type=int, default=DEFAULT_MAX_RETRIES)

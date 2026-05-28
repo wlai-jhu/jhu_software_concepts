@@ -5,6 +5,7 @@ Module Info:
 Module 2 - Assignment: Web Scraping
 Title: Grad Cafe Applicant Data Scraper
 Due Date: May 31, 2026
+Repository SSH URL: git@github.com:wlai-jhu/jhu_software_concepts.git
 
 Approach:
 This module is organized as a small Python scraping and cleaning package. All assignment
@@ -39,7 +40,9 @@ The optional comment enrichment step is implemented in enrich_comments.py. The p
 survey table does not always include applicant comments, so this script politely visits
 public /result/ detail pages, reads the public admission notes field, and adds comments
 when notes are available. It uses urllib, BeautifulSoup, a configurable delay, progress
-metadata, and stop conditions for blocking or server errors.
+metadata, 16-way detail-page batches by default, and stop conditions for blocking or
+server errors. The submitted applicant_data.json and llm_extend_applicant_data.json files
+include detail-page comments recovered by this enrichment step.
 
 The assignment-provided local LLM hosting package is stored under:
 module_2/llm_hosting
@@ -72,8 +75,8 @@ Install:
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 
-The top-level requirements.txt also installs the local LLM package dependencies listed
-in llm_hosting/requirements.txt.
+module_2/requirements.txt also installs the local LLM package dependencies listed in
+llm_hosting/requirements.txt.
 
 Run:
 .venv/bin/python scrape.py --target 50000 --delay 3 --output data/raw_applicant_data.json
@@ -125,11 +128,21 @@ Validate final JSON deliverables:
 The validator loads applicant_data.json and llm_extend_applicant_data.json, confirms each
 file has at least 50,000 records, and prints coverage counts for the required fields.
 
+Run a 95% confidence sample audit:
+../.venv/bin/python audit_sample.py --file applicant_data.json --confidence 0.95 --margin 0.05 --seed 20260528 --sample-output data/audit_sample_applicant_data.json
+../.venv/bin/python audit_sample.py --file llm_extend_applicant_data.json --confidence 0.95 --margin 0.05 --seed 20260528 --sample-output data/audit_sample_llm_extend.json
+
+The sample audit calculates the finite-population random sample size needed for the
+requested confidence level and margin of error, saves the sampled records for manual
+review, and runs automated checks for required keys, missing core fields, source links,
+status/date consistency, raw HTML remnants, and plausible numeric ranges. With 50,000
+records, the default 95% confidence and 5% margin of error samples 382 records.
+
 Optional comment enrichment:
 ../.venv/bin/python enrich_comments.py --input applicant_data.json --output applicant_data.json --max-detail-pages 200 --delay 1
 
 To check every applicant detail page for comments when available:
-../.venv/bin/python enrich_comments.py --input applicant_data_parallel.json --output applicant_data_parallel.json --all-records --parallel-pages 16 --delay 1 --save-every 25 --progress data/comment_enrichment_parallel.progress.json
+../.venv/bin/python enrich_comments.py --input applicant_data.json --output applicant_data.json --all-records --parallel-pages 16 --delay 1 --save-every 25 --progress data/comment_enrichment.progress.json
 
 The all-records run checks each public /result/ page that does not already have a comment.
 By default it fetches 16 public detail pages at a time, updates comments from the public
@@ -137,9 +150,10 @@ admission notes field when available, writes progress to the selected progress J
 and checkpoints the output JSON every 25 checked detail pages. The command is designed to
 be interrupted and resumed with --resume using the same --progress path.
 
-The submitted JSON files include comments recovered from the first 500 public detail
-pages checked by enrich_comments.py. At submission time, comments are available for 236
-records in both applicant_data.json and llm_extend_applicant_data.json.
+The submitted JSON files include comments recovered from checking all 50,000 public
+detail-page links when a public admission notes field was available. At submission time,
+comments are available for 23,865 records in both applicant_data.json and
+llm_extend_applicant_data.json.
 
 Systematic Cleaning Edge Cases:
 - Some Grad Cafe rows do not expose comments in the survey table view, so enrich_comments.py
