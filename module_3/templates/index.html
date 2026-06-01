@@ -15,7 +15,7 @@
       <div class="header-center">
         <a class="site-name" href="http://127.0.0.1:8080/">
           <span class="site-name-main">EN.605.256: Modern Software Concepts in Python (Summer 2026)</span>
-          <span class="site-name-sub">Module 3 Database Queries Assignment</span>
+          <span class="site-name-sub"></span>
         </a>
       </div>
       <nav class="navbar" aria-label="Main navigation">
@@ -26,15 +26,15 @@
     </header>
 
     <main>
-      <div class="main-toolbar">
-        <section class="page-title">
+      <section class="page-title">
+        <div>
           <p class="eyebrow">Module 3 SQL + Flask</p>
           <h1>Grad Cafe Data Analysis</h1>
-        </section>
+        </div>
         <form class="toolbar-action" action="{{ url_for('update_analysis') }}" method="post">
           <button class="secondary" type="submit">Update Analysis</button>
         </form>
-      </div>
+      </section>
 
       {% with messages = get_flashed_messages() %}
         {% if messages %}

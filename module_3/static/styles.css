@@ -121,25 +121,21 @@ main {
   padding: 56px 32px;
 }
 
-.main-toolbar {
-  align-items: flex-start;
-  display: flex;
-  gap: 18px;
-  justify-content: space-between;
-  margin-bottom: 18px;
-}
-
 .toolbar-action {
   margin: 0;
 }
 
 .page-title {
+  align-items: flex-start;
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 8px;
   border-top: 5px solid var(--blue);
   box-shadow: 0 16px 36px rgba(23, 33, 43, 0.08);
-  flex: 1;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  margin-bottom: 18px;
   padding: 34px;
 }
 
@@ -292,7 +288,7 @@ code {
 
 @media (max-width: 720px) {
   .site-header,
-  .main-toolbar,
+  .page-title,
   .actions {
     align-items: stretch;
     flex-direction: column;
