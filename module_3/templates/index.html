@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Grad Cafe Data Analysis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Module 3 SQL + Flask</p>
+        <h1>Grad Cafe Data Analysis</h1>
+      </div>
+      <form action="{{ url_for('update_analysis') }}" method="post">
+        <button class="secondary" type="submit">Update Analysis</button>
+      </form>
+    </header>
+
+    <main>
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <section class="messages">
+            {% for message in messages %}
+              <p>{{ message }}</p>
+            {% endfor %}
+          </section>
+        {% endif %}
+      {% endwith %}
+
+      <section class="actions">
+        <div>
+          <h2>Database Refresh</h2>
+          <p>
+            Pull Data starts the Module 2 Grad Cafe scraper, cleans any newly collected
+            records, and reloads the PostgreSQL applicants table. Update Analysis refreshes
+            this page with the current query results when no data pull is running.
+          </p>
+          <p class="status {% if pull_state.running %}running{% endif %}">
+            {{ pull_state.message }}
+          </p>
+        </div>
+        <form action="{{ url_for('pull_data') }}" method="post">
+          <button type="submit" {% if pull_state.running %}disabled{% endif %}>Pull Data</button>
+        </form>
+      </section>
+
+      {% if db_error %}
+        <section class="error">
+          <h2>Database connection needed</h2>
+          <p>{{ db_error }}</p>
+          <p>Set <code>DATABASE_URL</code>, install <code>requirements.txt</code>, and run <code>python load_data.py --reset</code>.</p>
+        </section>
+      {% endif %}
+
+      <section class="results">
+        {% for result in results %}
+          <article class="result-card">
+            <span class="number">{{ loop.index }}</span>
+            <div>
+              <h2>{{ result.question }}</h2>
+              <p class="answer">{{ result.answer }}</p>
+              <details>
+                <summary>SQL and explanation</summary>
+                <p>{{ result.explanation }}</p>
+                <pre><code>{{ result.sql }}</code></pre>
+              </details>
+            </div>
+          </article>
+        {% endfor %}
+      </section>
+    </main>
+  </body>
+</html>
