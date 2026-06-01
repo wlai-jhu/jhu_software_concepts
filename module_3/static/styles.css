@@ -1,14 +1,19 @@
 :root {
   color-scheme: light;
-  --ink: #162023;
-  --muted: #5d696d;
-  --line: #d8dee0;
-  --paper: #fbfcfc;
+  --ink: #172033;
+  --muted: #5d6c7a;
+  --blue: #005eb8;
+  --blue-dark: #003f7d;
+  --green: #3d6652;
+  --gold: #b08a2e;
+  --red: #b21f2d;
+  --line: #d8e2ea;
+  --paper: #f4f7fb;
   --panel: #ffffff;
-  --accent: #006d77;
-  --accent-dark: #004f57;
+  --soft-blue: #eaf3fb;
+  --soft-gold: #fbf5e7;
   --warn: #a85d00;
-  --error: #8f1d1d;
+  --error: #b21f2d;
 }
 
 * {
@@ -17,28 +22,50 @@
 
 body {
   margin: 0;
-  background: var(--paper);
+  background:
+    linear-gradient(180deg, #eef5fb 0, var(--paper) 360px),
+    var(--paper);
   color: var(--ink);
   font-family: Arial, Helvetica, sans-serif;
-  line-height: 1.5;
+  line-height: 1.65;
 }
 
 .topbar {
   align-items: center;
-  background: #e9f2f2;
+  background: rgba(255, 255, 255, 0.96);
   border-bottom: 1px solid var(--line);
+  box-shadow: 0 6px 18px rgba(23, 32, 51, 0.05);
   display: flex;
   gap: 24px;
   justify-content: space-between;
-  padding: 24px clamp(18px, 4vw, 56px);
+  padding: 18px 48px;
+}
+
+.site-name {
+  color: var(--ink);
+  display: grid;
+  gap: 2px;
+  min-width: 240px;
+  text-decoration: none;
+}
+
+.site-name-main {
+  color: var(--blue-dark);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.site-name-sub {
+  color: var(--muted);
+  font-size: 0.82rem;
 }
 
 .eyebrow {
-  color: var(--accent-dark);
-  font-size: 0.78rem;
+  color: var(--gold);
+  font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: 0;
-  margin: 0 0 4px;
+  margin: 0 0 10px;
   text-transform: uppercase;
 }
 
@@ -49,19 +76,20 @@ p {
 }
 
 h1 {
-  font-size: clamp(1.8rem, 4vw, 3.2rem);
-  line-height: 1.05;
+  color: var(--blue-dark);
+  font-size: 2.35rem;
+  line-height: 1.15;
   margin-bottom: 0;
 }
 
 main {
   margin: 0 auto;
   max-width: 1120px;
-  padding: 28px clamp(18px, 4vw, 56px) 48px;
+  padding: 56px 32px;
 }
 
 button {
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--blue), var(--blue-dark));
   border: 0;
   border-radius: 6px;
   color: white;
@@ -73,7 +101,7 @@ button {
 }
 
 button:hover {
-  background: var(--accent-dark);
+  background: var(--blue-dark);
 }
 
 button:disabled {
@@ -82,7 +110,9 @@ button:disabled {
 }
 
 button.secondary {
-  background: var(--ink);
+  background: var(--soft-blue);
+  border: 1px solid #bed5e8;
+  color: var(--blue);
 }
 
 .actions,
@@ -91,12 +121,14 @@ button.secondary {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 8px;
+  box-shadow: 0 16px 36px rgba(23, 33, 43, 0.08);
   margin-bottom: 18px;
-  padding: 18px;
+  padding: 24px;
 }
 
 .actions {
   align-items: center;
+  border-top: 5px solid var(--blue);
   display: flex;
   gap: 18px;
   justify-content: space-between;
@@ -104,7 +136,8 @@ button.secondary {
 
 .actions h2,
 .error h2 {
-  font-size: 1rem;
+  color: var(--blue-dark);
+  font-size: 1.12rem;
   margin-bottom: 6px;
 }
 
@@ -115,7 +148,7 @@ button.secondary {
 }
 
 .status {
-  color: var(--accent-dark);
+  color: var(--blue-dark);
   font-weight: 700;
 }
 
@@ -140,18 +173,20 @@ button.secondary {
 .result-card {
   background: var(--panel);
   border: 1px solid var(--line);
+  border-left: 5px solid var(--blue);
   border-radius: 8px;
+  box-shadow: 0 16px 36px rgba(23, 33, 43, 0.08);
   display: grid;
   gap: 16px;
   grid-template-columns: 42px 1fr;
-  padding: 18px;
+  padding: 24px;
 }
 
 .number {
   align-items: center;
-  background: #dcebec;
+  background: var(--soft-gold);
   border-radius: 50%;
-  color: var(--accent-dark);
+  color: var(--gold);
   display: flex;
   font-weight: 700;
   height: 42px;
@@ -160,12 +195,13 @@ button.secondary {
 }
 
 .result-card h2 {
-  font-size: 1.05rem;
+  color: var(--blue-dark);
+  font-size: 1.12rem;
   margin-bottom: 8px;
 }
 
 .answer {
-  color: var(--accent-dark);
+  color: var(--blue);
   font-size: 1.35rem;
   font-weight: 700;
   margin-bottom: 10px;
@@ -178,7 +214,8 @@ summary {
 }
 
 pre {
-  background: #f0f4f4;
+  background: var(--soft-blue);
+  border: 1px solid #bed5e8;
   border-radius: 6px;
   overflow-x: auto;
   padding: 12px;
@@ -197,7 +234,15 @@ code {
     flex-direction: column;
   }
 
+  .topbar {
+    padding: 16px 22px;
+  }
+
   .result-card {
     grid-template-columns: 1fr;
+  }
+
+  main {
+    padding: 32px 18px;
   }
 }
