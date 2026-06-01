@@ -51,10 +51,6 @@ a {
   padding: 18px 48px;
 }
 
-.header-center {
-  flex: 1;
-}
-
 .site-name {
   color: var(--ink);
   display: grid;
@@ -117,7 +113,7 @@ h1 {
 
 main {
   margin: 0 auto;
-  max-width: 1240px;
+  max-width: 860px;
   padding: 56px 32px;
 }
 
