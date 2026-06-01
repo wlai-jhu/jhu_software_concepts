@@ -113,7 +113,7 @@ h1 {
 
 main {
   margin: 0 auto;
-  max-width: 860px;
+  max-width: 1240px;
   padding: 56px 32px;
 }
 
@@ -132,7 +132,9 @@ main {
   gap: 18px;
   justify-content: space-between;
   margin-bottom: 18px;
+  max-width: 860px;
   padding: 34px;
+  width: 100%;
 }
 
 button {
@@ -170,7 +172,9 @@ button.secondary {
   border-radius: 8px;
   box-shadow: 0 16px 36px rgba(23, 33, 43, 0.08);
   margin-bottom: 18px;
+  max-width: 860px;
   padding: 24px;
+  width: 100%;
 }
 
 .actions {
@@ -215,6 +219,8 @@ button.secondary {
 .results {
   display: grid;
   gap: 14px;
+  max-width: 860px;
+  width: 100%;
 }
 
 .result-card {
