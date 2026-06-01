@@ -51,6 +51,10 @@ a {
   padding: 18px 48px;
 }
 
+.header-center {
+  flex: 1;
+}
+
 .site-name {
   color: var(--ink);
   display: grid;
@@ -117,13 +121,25 @@ main {
   padding: 56px 32px;
 }
 
+.main-toolbar {
+  align-items: flex-start;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.toolbar-action {
+  margin: 0;
+}
+
 .page-title {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 8px;
   border-top: 5px solid var(--blue);
   box-shadow: 0 16px 36px rgba(23, 33, 43, 0.08);
-  margin-bottom: 18px;
+  flex: 1;
   padding: 34px;
 }
 
@@ -276,6 +292,7 @@ code {
 
 @media (max-width: 720px) {
   .site-header,
+  .main-toolbar,
   .actions {
     align-items: stretch;
     flex-direction: column;

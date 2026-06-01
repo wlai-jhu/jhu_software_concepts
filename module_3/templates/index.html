@@ -23,16 +23,18 @@
         <a class="active" href="http://127.0.0.1:8080/projects">Projects</a>
         <a href="http://127.0.0.1:8080/contact">Contact</a>
       </nav>
-      <form action="{{ url_for('update_analysis') }}" method="post">
-        <button class="secondary" type="submit">Update Analysis</button>
-      </form>
     </header>
 
     <main>
-      <section class="page-title">
-        <p class="eyebrow">Module 3 SQL + Flask</p>
-        <h1>Grad Cafe Data Analysis</h1>
-      </section>
+      <div class="main-toolbar">
+        <section class="page-title">
+          <p class="eyebrow">Module 3 SQL + Flask</p>
+          <h1>Grad Cafe Data Analysis</h1>
+        </section>
+        <form class="toolbar-action" action="{{ url_for('update_analysis') }}" method="post">
+          <button class="secondary" type="submit">Update Analysis</button>
+        </form>
+      </div>
 
       {% with messages = get_flashed_messages() %}
         {% if messages %}
