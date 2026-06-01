@@ -21,11 +21,15 @@ PARAGRAPHS = [
         "the full applicant population. For example, an average GRE quantitative score from Grad "
         "Cafe can be much higher than a broader benchmark if applicants with strong scores are "
         "more willing to disclose them, if international STEM applicants are overrepresented, or "
-        "if users without scores leave the field blank and are excluded from averages. Similar "
-        "selection effects can affect acceptance rates, GPA averages, and school-specific counts. "
-        "The data is still valuable for exploratory analysis, but the limitations make careful "
-        "wording important: the results describe anonymous self-reported entries, not verified "
-        "admissions outcomes."
+        "if users without scores leave the field blank and are excluded from averages. In my "
+        "cleaned dataset, 31,430 of 50,000 records are Fall 2026 entries, about 37.08 percent "
+        "of those Fall 2026 entries are acceptances, and about 47.73 percent of all rows include "
+        "comments. The modern-scale GRE quantitative subset averages about 165.81, while the raw "
+        "GRE field contains mixed scales that make an unfiltered average misleading. Similar "
+        "selection and formatting effects can affect acceptance rates, GPA averages, and "
+        "school-specific counts. The data is still valuable for exploratory analysis, but the "
+        "limitations make careful wording important: the results describe anonymous self-reported "
+        "entries, not verified admissions outcomes."
     ),
 ]
 

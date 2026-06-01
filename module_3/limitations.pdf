@@ -1,6 +1,6 @@
 %PDF-1.4
 1 0 obj
-<< /Length 2087 >>
+<< /Length 2541 >>
 stream
 BT
 /F1 11 Tf
@@ -54,7 +54,19 @@ BT
 (disclose them, if international STEM applicants are overrepresented, or if users without) Tj
 0 -14 Td
 /F1 11 Tf
-(scores leave the field blank and are excluded from averages. Similar selection effects can) Tj
+(scores leave the field blank and are excluded from averages. In my cleaned dataset, 31,430) Tj
+0 -14 Td
+/F1 11 Tf
+(of 50,000 records are Fall 2026 entries, about 37.08 percent of those Fall 2026 entries are) Tj
+0 -14 Td
+/F1 11 Tf
+(acceptances, and about 47.73 percent of all rows include comments. The modern-scale GRE) Tj
+0 -14 Td
+/F1 11 Tf
+(quantitative subset averages about 165.81, while the raw GRE field contains mixed scales) Tj
+0 -14 Td
+/F1 11 Tf
+(that make an unfiltered average misleading. Similar selection and formatting effects can) Tj
 0 -14 Td
 /F1 11 Tf
 (affect acceptance rates, GPA averages, and school-specific counts. The data is still) Tj
@@ -86,7 +98,7 @@ xref
 0 1001
 0000000000 65535 f 
 0000000009 00000 n 
-0000002148 00000 n 
+0000002602 00000 n 
 0000000000 65535 f 
 0000000000 65535 f 
 0000000000 65535 f 
@@ -1082,11 +1094,11 @@ xref
 0000000000 65535 f 
 0000000000 65535 f 
 0000000000 65535 f 
-0000002278 00000 n 
-0000002350 00000 n 
-0000002409 00000 n 
+0000002732 00000 n 
+0000002804 00000 n 
+0000002863 00000 n 
 trailer
 << /Size 1001 /Root 1000 0 R >>
 startxref
-2463
+2917
 %%EOF

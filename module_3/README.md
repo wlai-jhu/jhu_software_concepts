@@ -20,6 +20,14 @@ Create or activate the project virtual environment, then install the Module 3 de
 python -m pip install -r module_3/requirements.txt
 ```
 
+Install and start PostgreSQL before loading data. On macOS, the simplest local option is
+[Postgres.app](https://postgresapp.com/). After opening Postgres.app, start the server and
+create the `gradcafe` database:
+
+```bash
+/Applications/Postgres.app/Contents/Versions/latest/bin/createdb gradcafe
+```
+
 Create a PostgreSQL database. The scripts default to:
 
 ```bash
@@ -30,6 +38,12 @@ To use a different database, set `DATABASE_URL` before running the scripts:
 
 ```bash
 export DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/gradcafe"
+```
+
+On this Mac, the local Postgres.app-style connection string is expected to be:
+
+```bash
+export DATABASE_URL="postgresql://wmacbookpro@localhost:5432/gradcafe"
 ```
 
 ## Load Data
@@ -78,7 +92,9 @@ http://127.0.0.1:8080/projects
 
 For that link to open the analysis page, run the Module 1 portfolio server on port 8080 and this Module 3 Flask app on port 5000 at the same time.
 
-The `Pull Data` button starts the Module 2 scraper and cleaner in the background, then reloads records into PostgreSQL. The `Update Analysis` button refreshes the page unless a data pull is already running.
+The `Pull Data` button starts the Module 2 scraper and cleaner in the background, attempts to refresh LLM-standardized fields with `module_2/llm_clean.py`, and then reloads records into PostgreSQL. If the LLM step cannot complete, the page reports the fallback and still reloads the downloaded/cleaned fields so the database remains usable.
+
+The `Update Analysis` button refreshes the page unless a data pull is already running.
 
 ## Written Reflection
 

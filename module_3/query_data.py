@@ -126,21 +126,44 @@ ANALYSIS_QUESTIONS: List[AnalysisQuestion] = [
         "target_school_phd_cs_acceptances_llm",
         "Does question 8 change when using LLM generated fields?",
         """
-        SELECT COUNT(*) AS answer
-        FROM applicants
-        WHERE term ILIKE '%2026%'
-          AND status = 'Accepted'
-          AND degree ILIKE 'PhD'
-          AND llm_generated_program ILIKE '%Computer Science%'
-          AND (
-              llm_generated_university ILIKE '%Georgetown University%'
-              OR llm_generated_university ILIKE '%MIT%'
-              OR llm_generated_university ILIKE '%Massachusetts Institute of Technology%'
-              OR llm_generated_university ILIKE '%Stanford University%'
-              OR llm_generated_university ILIKE '%Carnegie Mellon University%'
-          );
+        WITH downloaded_fields AS (
+            SELECT COUNT(*) AS count
+            FROM applicants
+            WHERE term ILIKE '%2026%'
+              AND status = 'Accepted'
+              AND degree ILIKE 'PhD'
+              AND program ILIKE '%Computer Science%'
+              AND (
+                  program ILIKE '%Georgetown University%'
+                  OR program ILIKE '%MIT%'
+                  OR program ILIKE '%Massachusetts Institute of Technology%'
+                  OR program ILIKE '%Stanford University%'
+                  OR program ILIKE '%Carnegie Mellon University%'
+              )
+        ),
+        llm_fields AS (
+            SELECT COUNT(*) AS count
+            FROM applicants
+            WHERE term ILIKE '%2026%'
+              AND status = 'Accepted'
+              AND degree ILIKE 'PhD'
+              AND llm_generated_program ILIKE '%Computer Science%'
+              AND (
+                  llm_generated_university ILIKE '%Georgetown University%'
+                  OR llm_generated_university ILIKE '%MIT%'
+                  OR llm_generated_university ILIKE '%Massachusetts Institute of Technology%'
+                  OR llm_generated_university ILIKE '%Stanford University%'
+                  OR llm_generated_university ILIKE '%Carnegie Mellon University%'
+              )
+        )
+        SELECT
+            downloaded_fields.count AS downloaded_count,
+            llm_fields.count AS llm_count,
+            downloaded_fields.count <> llm_fields.count AS changed
+        FROM downloaded_fields, llm_fields;
         """,
-        "Repeats question 8, but matches against standardized LLM program and university fields.",
+        "Compares the downloaded-field count from question 8 with the same count using standardized LLM program and university fields.",
+        value_field="comparison",
     ),
     AnalysisQuestion(
         "original_question_comments",
@@ -179,6 +202,12 @@ def format_result(question: AnalysisQuestion, row: Optional[Dict[str, Any]], row
         )
     if question.value_field == "table":
         return "; ".join(f"{item['status'] or 'Unknown'}: {item['count']}" for item in rows)
+    if question.value_field == "comparison" and row:
+        changed_text = "changed" if row["changed"] else "did not change"
+        return (
+            f"Downloaded fields: {row['downloaded_count']}; "
+            f"LLM fields: {row['llm_count']}; result {changed_text}."
+        )
     if not row:
         return "No result"
     return str(row.get("answer"))

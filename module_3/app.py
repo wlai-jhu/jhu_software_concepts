@@ -30,6 +30,8 @@ def run_data_pull() -> None:
 
     try:
         scrape_output = MODULE_2_DIR / "data" / "raw_applicant_data.json"
+        cleaned_output = MODULE_2_DIR / "applicant_data.json"
+        llm_output = MODULE_2_DIR / "llm_extend_applicant_data.json"
         commands = [
             [
                 sys.executable,
@@ -48,15 +50,41 @@ def run_data_pull() -> None:
                 "--input",
                 str(scrape_output),
                 "--output",
-                str(MODULE_2_DIR / "applicant_data.json"),
+                str(cleaned_output),
             ],
         ]
 
         for command in commands:
             subprocess.run(command, cwd=MODULE_2_DIR, check=True)
 
-        loaded = load_applicants(MODULE_2_DIR / "applicant_data.json", reset=True)
-        message = f"Pull Data finished and reloaded {loaded:,} records into PostgreSQL."
+        load_path = cleaned_output
+        llm_message = "Downloaded fields were refreshed; LLM fields were not regenerated."
+        try:
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(MODULE_2_DIR / "llm_clean.py"),
+                    "--input",
+                    str(scrape_output),
+                    "--output",
+                    str(llm_output),
+                    "--resume-llm",
+                    "--llm-batch-size",
+                    "1000",
+                ],
+                cwd=MODULE_2_DIR,
+                check=True,
+            )
+            load_path = llm_output
+            llm_message = "Downloaded and LLM-generated fields were refreshed."
+        except Exception as exc:
+            llm_message = (
+                "Downloaded fields were refreshed. LLM regeneration did not complete, "
+                f"so existing or fallback LLM values may be used: {exc}"
+            )
+
+        loaded = load_applicants(load_path, reset=True)
+        message = f"Pull Data finished and reloaded {loaded:,} records into PostgreSQL. {llm_message}"
     except Exception as exc:
         message = f"Pull Data stopped: {exc}"
 
