@@ -70,6 +70,14 @@ Open the local URL printed by Flask, usually:
 http://127.0.0.1:5000
 ```
 
+The Module 1 portfolio projects page also links to this local Module 3 analysis app from:
+
+```text
+http://127.0.0.1:8080/projects
+```
+
+For that link to open the analysis page, run the Module 1 portfolio server on port 8080 and this Module 3 Flask app on port 5000 at the same time.
+
 The `Pull Data` button starts the Module 2 scraper and cleaner in the background, then reloads records into PostgreSQL. The `Update Analysis` button refreshes the page unless a data pull is already running.
 
 ## Written Reflection
