@@ -30,7 +30,17 @@ body {
   line-height: 1.65;
 }
 
-.topbar {
+a {
+  color: var(--blue);
+}
+
+.site-logo img {
+  display: block;
+  height: 100px;
+  width: auto;
+}
+
+.site-header {
   align-items: center;
   background: rgba(255, 255, 255, 0.96);
   border-bottom: 1px solid var(--line);
@@ -45,19 +55,38 @@ body {
   color: var(--ink);
   display: grid;
   gap: 2px;
-  min-width: 240px;
   text-decoration: none;
 }
 
 .site-name-main {
   color: var(--blue-dark);
-  font-size: 1.05rem;
+  font-size: 1.25rem;
   font-weight: 700;
 }
 
 .site-name-sub {
   color: var(--muted);
   font-size: 0.82rem;
+}
+
+.navbar {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.navbar a {
+  border-radius: 6px;
+  color: var(--ink);
+  font-weight: 700;
+  padding: 9px 14px;
+  text-decoration: none;
+}
+
+.navbar a:hover,
+.navbar a.active {
+  background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+  color: #ffffff;
 }
 
 .eyebrow {
@@ -84,8 +113,18 @@ h1 {
 
 main {
   margin: 0 auto;
-  max-width: 1120px;
+  max-width: 1240px;
   padding: 56px 32px;
+}
+
+.page-title {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  border-top: 5px solid var(--blue);
+  box-shadow: 0 16px 36px rgba(23, 33, 43, 0.08);
+  margin-bottom: 18px;
+  padding: 34px;
 }
 
 button {
@@ -227,15 +266,28 @@ code {
   font-size: 0.9rem;
 }
 
+.site-footer {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0 auto;
+  max-width: 1120px;
+  padding: 0 32px 32px;
+}
+
 @media (max-width: 720px) {
-  .topbar,
+  .site-header,
   .actions {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .topbar {
+  .site-header {
     padding: 16px 22px;
+  }
+
+  .navbar {
+    flex-wrap: wrap;
+    justify-content: flex-start;
   }
 
   .result-card {

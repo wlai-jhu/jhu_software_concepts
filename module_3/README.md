@@ -10,6 +10,7 @@ This folder loads the cleaned Module 2 Grad Cafe data into PostgreSQL, runs the 
 - `templates/index.html` and `static/styles.css`: webpage layout and styling.
 - `make_query_report.py`: creates `analysis_results.pdf` after the database is loaded.
 - `make_limitations_pdf.py`: creates `limitations.pdf`.
+- `pipeline/`: local Module 3 copy of the scraper, cleaner, and LLM standardization code used by the `Pull Data` button.
 - `requirements.txt`: packages needed for PostgreSQL, Flask, and the Module 2 scraper.
 
 ## Setup

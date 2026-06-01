@@ -10,8 +10,7 @@ from query_data import run_all_queries
 
 
 BASE_DIR = Path(__file__).resolve().parent
-REPO_DIR = BASE_DIR.parent
-MODULE_2_DIR = REPO_DIR / "module_2"
+PIPELINE_DIR = BASE_DIR / "pipeline"
 
 app = Flask(__name__)
 app.secret_key = "module-3-gradcafe-analysis"
@@ -29,13 +28,13 @@ def run_data_pull() -> None:
         pull_state["message"] = "Pull Data is running. This can take a while because Grad Cafe requests are delayed."
 
     try:
-        scrape_output = MODULE_2_DIR / "data" / "raw_applicant_data.json"
-        cleaned_output = MODULE_2_DIR / "applicant_data.json"
-        llm_output = MODULE_2_DIR / "llm_extend_applicant_data.json"
+        scrape_output = PIPELINE_DIR / "data" / "raw_applicant_data.json"
+        cleaned_output = PIPELINE_DIR / "applicant_data.json"
+        llm_output = PIPELINE_DIR / "llm_extend_applicant_data.json"
         commands = [
             [
                 sys.executable,
-                str(MODULE_2_DIR / "scrape.py"),
+                str(PIPELINE_DIR / "scrape.py"),
                 "--target",
                 "50000",
                 "--delay",
@@ -46,7 +45,7 @@ def run_data_pull() -> None:
             ],
             [
                 sys.executable,
-                str(MODULE_2_DIR / "clean.py"),
+                str(PIPELINE_DIR / "clean.py"),
                 "--input",
                 str(scrape_output),
                 "--output",
@@ -55,7 +54,7 @@ def run_data_pull() -> None:
         ]
 
         for command in commands:
-            subprocess.run(command, cwd=MODULE_2_DIR, check=True)
+            subprocess.run(command, cwd=PIPELINE_DIR, check=True)
 
         load_path = cleaned_output
         llm_message = "Downloaded fields were refreshed; LLM fields were not regenerated."
@@ -63,7 +62,7 @@ def run_data_pull() -> None:
             subprocess.run(
                 [
                     sys.executable,
-                    str(MODULE_2_DIR / "llm_clean.py"),
+                    str(PIPELINE_DIR / "llm_clean.py"),
                     "--input",
                     str(scrape_output),
                     "--output",
@@ -72,7 +71,7 @@ def run_data_pull() -> None:
                     "--llm-batch-size",
                     "1000",
                 ],
-                cwd=MODULE_2_DIR,
+                cwd=PIPELINE_DIR,
                 check=True,
             )
             load_path = llm_output

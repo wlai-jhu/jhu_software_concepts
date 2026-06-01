@@ -7,21 +7,33 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   </head>
   <body>
-    <header class="topbar">
-      <a class="site-name" href="http://127.0.0.1:8080/projects">
-        <span class="site-name-main">EN.605.256: Modern Software Concepts in Python</span>
-        <span class="site-name-sub">Back to Course Projects</span>
+    <header class="site-header">
+      <a class="site-logo" href="http://127.0.0.1:8080/">
+        <img src="{{ url_for('static', filename='img/schools/jhu-wse-logo.jpg') }}"
+             alt="Johns Hopkins University logo">
       </a>
-      <div>
-        <p class="eyebrow">Module 3 SQL + Flask</p>
-        <h1>Grad Cafe Data Analysis</h1>
+      <div class="header-center">
+        <a class="site-name" href="http://127.0.0.1:8080/">
+          <span class="site-name-main">EN.605.256: Modern Software Concepts in Python (Summer 2026)</span>
+          <span class="site-name-sub">Module 3 Database Queries Assignment</span>
+        </a>
       </div>
+      <nav class="navbar" aria-label="Main navigation">
+        <a href="http://127.0.0.1:8080/">Home</a>
+        <a class="active" href="http://127.0.0.1:8080/projects">Projects</a>
+        <a href="http://127.0.0.1:8080/contact">Contact</a>
+      </nav>
       <form action="{{ url_for('update_analysis') }}" method="post">
         <button class="secondary" type="submit">Update Analysis</button>
       </form>
     </header>
 
     <main>
+      <section class="page-title">
+        <p class="eyebrow">Module 3 SQL + Flask</p>
+        <h1>Grad Cafe Data Analysis</h1>
+      </section>
+
       {% with messages = get_flashed_messages() %}
         {% if messages %}
           <section class="messages">
@@ -36,9 +48,10 @@
         <div>
           <h2>Database Refresh</h2>
           <p>
-            Pull Data starts the Module 2 Grad Cafe scraper, cleans any newly collected
-            records, and reloads the PostgreSQL applicants table. Update Analysis refreshes
-            this page with the current query results when no data pull is running.
+            Pull Data starts the Module 3 Grad Cafe scraper pipeline, cleans any newly
+            collected records, attempts to refresh LLM fields, and reloads the PostgreSQL
+            applicants table. Update Analysis refreshes this page with the current query
+            results when no data pull is running.
           </p>
           <p class="status {% if pull_state.running %}running{% endif %}">
             {{ pull_state.message }}
@@ -74,5 +87,9 @@
         {% endfor %}
       </section>
     </main>
+
+    <footer class="site-footer">
+      <p>Johns Hopkins University | Whiting School of Engineering | EN.605.256: Modern Software Concepts in Python | Summer 2026</p>
+    </footer>
   </body>
 </html>
