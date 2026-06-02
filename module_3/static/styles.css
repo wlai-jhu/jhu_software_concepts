@@ -118,6 +118,7 @@ main {
 }
 
 .toolbar-action {
+  flex: 0 0 166px;
   margin: 0;
 }
 
@@ -146,7 +147,7 @@ button {
   font: inherit;
   font-weight: 700;
   min-height: 42px;
-  min-width: 142px;
+  min-width: 166px;
   padding: 10px 18px;
   white-space: nowrap;
 }
@@ -167,7 +168,6 @@ button.secondary {
 }
 
 .actions,
-.messages,
 .error {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -188,8 +188,13 @@ button.secondary {
   min-height: 188px;
 }
 
-.actions form {
-  flex: 0 0 auto;
+.actions-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.panel-action {
+  flex: 0 0 166px;
   margin: 0;
 }
 
@@ -209,14 +214,22 @@ button.secondary {
 .status {
   color: var(--blue-dark);
   font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .status.running {
   color: var(--warn);
 }
 
-.messages p {
+.inline-messages {
+  color: var(--blue-dark);
+  font-weight: 700;
+  margin-top: 14px;
+}
+
+.inline-messages p {
   margin-bottom: 0;
+  overflow-wrap: anywhere;
 }
 
 .error {

@@ -30,24 +30,23 @@
         <div>
           <p class="eyebrow">Module 3 SQL + Flask</p>
           <h1>Grad Cafe Data Analysis</h1>
+          {% with messages = get_flashed_messages() %}
+            {% if messages %}
+              <div class="inline-messages">
+                {% for message in messages %}
+                  <p>{{ message }}</p>
+                {% endfor %}
+              </div>
+            {% endif %}
+          {% endwith %}
         </div>
         <form class="toolbar-action" action="{{ url_for('update_analysis') }}" method="post">
           <button class="secondary" type="submit">Update Analysis</button>
         </form>
       </section>
 
-      {% with messages = get_flashed_messages() %}
-        {% if messages %}
-          <section class="messages">
-            {% for message in messages %}
-              <p>{{ message }}</p>
-            {% endfor %}
-          </section>
-        {% endif %}
-      {% endwith %}
-
       <section class="actions">
-        <div>
+        <div class="actions-copy">
           <h2>Database Refresh</h2>
           <p>
             Pull Data starts the Module 3 Grad Cafe scraper pipeline, cleans any newly
@@ -59,7 +58,7 @@
             {{ pull_state.message }}
           </p>
         </div>
-        <form action="{{ url_for('pull_data') }}" method="post">
+        <form class="panel-action" action="{{ url_for('pull_data') }}" method="post">
           <button type="submit" {% if pull_state.running %}disabled{% endif %}>Pull Data</button>
         </form>
       </section>
