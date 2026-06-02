@@ -1,6 +1,7 @@
 import subprocess
 import sys
 import threading
+import shutil
 from pathlib import Path
 
 from flask import Flask, flash, redirect, render_template, url_for
@@ -11,6 +12,7 @@ from query_data import run_all_queries
 
 BASE_DIR = Path(__file__).resolve().parent
 PIPELINE_DIR = BASE_DIR / "pipeline"
+SUBMITTED_DATA_PATH = BASE_DIR.parent / "module_2" / "llm_extend_applicant_data.json"
 
 app = Flask(__name__)
 app.secret_key = "module-3-gradcafe-analysis"
@@ -31,15 +33,25 @@ def run_data_pull() -> None:
         scrape_output = PIPELINE_DIR / "data" / "raw_applicant_data.json"
         cleaned_output = PIPELINE_DIR / "applicant_data.json"
         llm_output = PIPELINE_DIR / "llm_extend_applicant_data.json"
+        if not scrape_output.exists() and SUBMITTED_DATA_PATH.exists():
+            scrape_output.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(SUBMITTED_DATA_PATH, scrape_output)
+
+        existing_records = 0
+        if scrape_output.exists():
+            import json
+
+            existing_records = len(json.loads(scrape_output.read_text(encoding="utf-8")))
+        target_records = max(existing_records + 1000, 1000)
         commands = [
             [
                 sys.executable,
                 str(PIPELINE_DIR / "scrape.py"),
                 "--target",
-                "50000",
+                str(target_records),
                 "--delay",
                 "3",
-                "--resume",
+                "--stop-on-existing",
                 "--output",
                 str(scrape_output),
             ],

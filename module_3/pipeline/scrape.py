@@ -43,6 +43,7 @@ class GradCafeScraper:
         start_page: int = 1,
         resume: bool = False,
         parallel_pages: int = DEFAULT_PARALLEL_PAGES,
+        stop_on_existing: bool = False,
     ):
         self.target_records = target_records
         self.delay_seconds = delay_seconds
@@ -53,6 +54,7 @@ class GradCafeScraper:
         self.start_page = max(1, start_page)
         self.resume = resume
         self.parallel_pages = max(1, parallel_pages)
+        self.stop_on_existing = stop_on_existing
         self.progress_path = self.output_path.with_suffix(".progress.json")
         self.robot_parser = robotparser.RobotFileParser()
         self.robot_parser.set_url(parse.urljoin(BASE_URL, "/robots.txt"))
@@ -83,7 +85,7 @@ class GradCafeScraper:
             raise PermissionError("robots.txt does not permit scraping the configured Grad Cafe URL.")
 
         records: List[Dict[str, Optional[str]]] = []
-        if self.resume:
+        if self.resume or self.stop_on_existing:
             records = self._deduplicate_records(self.load_existing_data())
 
         seen_record_keys = self._seen_record_keys(records)
@@ -104,6 +106,8 @@ class GradCafeScraper:
                 break
 
             processed_any_records = False
+            duplicate_records = 0
+            new_records = 0
             last_processed_page = page - 1
             for result_page, page_records in batch_results:
                 if not page_records:
@@ -119,10 +123,22 @@ class GradCafeScraper:
                     if record_keys and not seen_record_keys.intersection(record_keys):
                         records.append(record)
                         seen_record_keys.update(record_keys)
+                        new_records += 1
+                    else:
+                        duplicate_records += 1
                     if len(records) >= self.target_records:
                         break
                 if len(records) >= self.target_records:
                     break
+
+            if self.stop_on_existing and duplicate_records > 0 and new_records == 0:
+                print(
+                    "Existing records detected and no new records found in this batch; "
+                    "stopping incremental scrape."
+                )
+                self.save_data(records)
+                self.save_progress(page=last_processed_page, record_count=len(records))
+                return records
 
             if not processed_any_records:
                 break
@@ -553,6 +569,11 @@ def main() -> None:
     parser.add_argument("--start-page", type=int, default=1)
     parser.add_argument("--resume", action="store_true")
     parser.add_argument(
+        "--stop-on-existing",
+        action="store_true",
+        help="Stop an incremental scrape once a fetched batch only contains records already in the output dataset.",
+    )
+    parser.add_argument(
         "--parallel-pages",
         type=int,
         default=DEFAULT_PARALLEL_PAGES,
@@ -570,6 +591,7 @@ def main() -> None:
         start_page=args.start_page,
         resume=args.resume,
         parallel_pages=args.parallel_pages,
+        stop_on_existing=args.stop_on_existing,
     )
 
     allowed = scraper.check_robots()
