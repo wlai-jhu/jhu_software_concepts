@@ -10,7 +10,7 @@ This folder loads the cleaned Module 2 Grad Cafe data into PostgreSQL, runs the 
 - `templates/index.html` and `static/styles.css`: webpage layout and styling.
 - `make_query_report.py`: creates `analysis_results.pdf` after the database is loaded.
 - `make_limitations_pdf.py`: creates `limitations.pdf`.
-- `pipeline/`: local Module 3 copy of the scraper, cleaner, and LLM standardization code used by the `Pull Data` button.
+- `pipeline/`: local Module 3 copy of the scraper, cleaner, comment enrichment, and LLM standardization code used by the `Pull Data` button.
 - `requirements.txt`: packages needed for PostgreSQL, Flask, and the Module 2 scraper.
 
 ## Setup
@@ -93,7 +93,7 @@ http://127.0.0.1:8080/projects
 
 For that link to open the analysis page, run the Module 1 portfolio server on port 8080 and this Module 3 Flask app on port 5000 at the same time.
 
-The `Pull Data` button starts the Module 3 scraper pipeline in the background, preserves the enriched submitted dataset as the baseline, stops once newly fetched Grad Cafe pages overlap with existing records, attempts to refresh LLM-standardized fields, and then reloads records into PostgreSQL. If the LLM step cannot complete, the page reports the fallback and still reloads the downloaded/cleaned fields so the database remains usable.
+The `Pull Data` button starts the Module 3 scraper pipeline in the background, preserves the enriched submitted dataset as the baseline, pulls Grad Cafe survey pages 16 at a time, stops once newly fetched pages overlap with existing records, enriches comments from public detail pages 16 at a time for newly added records, attempts to refresh LLM-standardized fields, and then reloads records into PostgreSQL. If the LLM step cannot complete, the page reports the fallback and still reloads the downloaded/cleaned fields so the database remains usable.
 
 The `Update Analysis` button refreshes the page unless a data pull is already running.
 

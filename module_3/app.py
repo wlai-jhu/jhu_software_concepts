@@ -79,6 +79,8 @@ def run_data_pull() -> None:
                 "--delay",
                 "3",
                 "--stop-on-existing",
+                "--parallel-pages",
+                "16",
                 "--output",
                 str(scrape_output),
             ],
@@ -95,15 +97,37 @@ def run_data_pull() -> None:
         for command in commands:
             subprocess.run(command, cwd=PIPELINE_DIR, check=True)
 
+        subprocess.run(
+            [
+                sys.executable,
+                str(PIPELINE_DIR / "enrich_comments.py"),
+                "--input",
+                str(cleaned_output),
+                "--output",
+                str(cleaned_output),
+                "--start-index",
+                str(existing_records),
+                "--all-records",
+                "--parallel-pages",
+                "16",
+                "--delay",
+                "1",
+                "--progress",
+                str(PIPELINE_DIR / "data" / "comment_enrichment.progress.json"),
+            ],
+            cwd=PIPELINE_DIR,
+            check=True,
+        )
+
         load_path = cleaned_output
-        llm_message = "Downloaded fields were refreshed; LLM fields were not regenerated."
+        llm_message = "Downloaded fields and comments were refreshed; LLM fields were not regenerated."
         try:
             subprocess.run(
                 [
                     sys.executable,
                     str(PIPELINE_DIR / "llm_clean.py"),
                     "--input",
-                    str(scrape_output),
+                    str(cleaned_output),
                     "--output",
                     str(llm_output),
                     "--resume-llm",
@@ -117,7 +141,7 @@ def run_data_pull() -> None:
             llm_message = "Downloaded and LLM-generated fields were refreshed."
         except Exception as exc:
             llm_message = (
-                "Downloaded fields were refreshed. LLM regeneration did not complete, "
+                "Downloaded fields and comments were refreshed. LLM regeneration did not complete, "
                 f"so existing or fallback LLM values may be used: {exc}"
             )
 
