@@ -27,18 +27,20 @@
 
     <main>
       <section class="page-title">
-        <div>
+        <div class="title-copy">
           <p class="eyebrow">Module 3 SQL + Flask</p>
           <h1>Grad Cafe Data Analysis</h1>
-          {% with messages = get_flashed_messages() %}
-            {% if messages %}
-              <div class="inline-messages">
+          <div class="inline-messages" aria-live="polite">
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
                 {% for message in messages %}
                   <p>{{ message }}</p>
                 {% endfor %}
-              </div>
-            {% endif %}
-          {% endwith %}
+              {% else %}
+                <p>&nbsp;</p>
+              {% endif %}
+            {% endwith %}
+          </div>
         </div>
         <form class="toolbar-action" action="{{ url_for('update_analysis') }}" method="post">
           <button class="secondary" type="submit">Update Analysis</button>

@@ -134,8 +134,14 @@ main {
   justify-content: space-between;
   margin-bottom: 18px;
   max-width: 860px;
+  min-height: 172px;
   padding: 34px;
   width: 100%;
+}
+
+.title-copy {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 button {
@@ -225,6 +231,7 @@ button.secondary {
   color: var(--blue-dark);
   font-weight: 700;
   margin-top: 14px;
+  min-height: 28px;
 }
 
 .inline-messages p {
