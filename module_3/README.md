@@ -1,5 +1,15 @@
 # Module 3 - Database Queries Assignment
 
+Name: Wade Lai  
+JHED ID: wlai8
+
+## Module Info
+
+- Module 3 - Assignment: Database Queries
+- Title: Grad Cafe Data Analysis
+- Due Date: June 7, 2026
+- Repository SSH URL: git@github.com:wlai-jhu/jhu_software_concepts.git
+
 This folder loads the cleaned Module 2 Grad Cafe data into PostgreSQL, runs the required SQL analysis questions, and displays the results on a Flask webpage.
 
 ## Files

@@ -19,6 +19,7 @@ SUBMITTED_DATA_PATH = BASE_DIR.parent / "module_2" / "llm_extend_applicant_data.
 app = Flask(__name__)
 app.secret_key = "module-3-gradcafe-analysis"
 
+# Shared state used by the background Pull Data thread and the status endpoint.
 pull_lock = threading.Lock()
 pull_state = {
     "running": False,
@@ -28,6 +29,7 @@ pull_state = {
 
 
 def seed_scrape_output(scrape_output: Path) -> None:
+    """Use the submitted Module 2 dataset as the baseline for incremental pulls."""
     if not SUBMITTED_DATA_PATH.exists():
         return
 
@@ -58,6 +60,7 @@ def seed_scrape_output(scrape_output: Path) -> None:
 
 
 def llm_dependencies_available() -> bool:
+    """Check optional local LLM packages before starting the slower model workflow."""
     return all(
         importlib.util.find_spec(package_name) is not None
         for package_name in ("huggingface_hub", "llama_cpp")
@@ -80,6 +83,9 @@ def run_data_pull() -> None:
         if scrape_output.exists():
             existing_records = len(json.loads(scrape_output.read_text(encoding="utf-8")))
         target_records = max(existing_records + 1000, 1000)
+
+        # The scraper stops early when a fetched batch overlaps with existing URLs, so this
+        # target is a ceiling rather than a requirement to scrape another 1,000 records.
         commands = [
             [
                 sys.executable,
@@ -107,6 +113,7 @@ def run_data_pull() -> None:
         for command in commands:
             subprocess.run(command, cwd=PIPELINE_DIR, check=True)
 
+        # Comments live on entry detail pages, so they are enriched after the list scrape.
         subprocess.run(
             [
                 sys.executable,
@@ -132,6 +139,8 @@ def run_data_pull() -> None:
         load_path = cleaned_output
         llm_message = "Downloaded fields and comments were refreshed; LLM fields were not regenerated."
         try:
+            # If local LLM dependencies are missing, the deterministic fallback keeps the
+            # database load usable instead of failing the whole Pull Data action.
             llm_command = [
                 sys.executable,
                 str(PIPELINE_DIR / "llm_clean.py"),

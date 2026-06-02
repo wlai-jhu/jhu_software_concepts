@@ -10,7 +10,8 @@ from db import connect
 
 DEFAULT_INPUT_PATH = Path(__file__).resolve().parents[1] / "module_2" / "llm_extend_applicant_data.json"
 
-
+# PostgreSQL table shape mirrors the assignment questions and keeps both downloaded
+# fields and LLM-standardized fields available for comparison.
 CREATE_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS applicants (
     p_id integer PRIMARY KEY,
@@ -64,6 +65,7 @@ def load_json(path: Path) -> Iterable[Dict[str, Any]]:
 
 
 def parse_date(value: Optional[str]) -> Optional[str]:
+    """Accept the date formats produced by the scraper and normalize them for PostgreSQL."""
     if not value:
         return None
     for date_format in ("%B %d, %Y", "%b %d, %Y", "%Y-%m-%d"):
@@ -75,6 +77,7 @@ def parse_date(value: Optional[str]) -> Optional[str]:
 
 
 def parse_float(value: Any) -> Optional[float]:
+    """Extract a numeric value from fields that may include labels or extra text."""
     if value in (None, ""):
         return None
     match = re.search(r"-?\d+(?:\.\d+)?", str(value))
@@ -84,6 +87,7 @@ def parse_float(value: Any) -> Optional[float]:
 
 
 def first_present(record: Dict[str, Any], *keys: str) -> Optional[str]:
+    """Return the first populated value from alternate scraper/LLM field names."""
     for key in keys:
         value = record.get(key)
         if value not in (None, ""):
@@ -92,6 +96,7 @@ def first_present(record: Dict[str, Any], *keys: str) -> Optional[str]:
 
 
 def normalize_record(record: Dict[str, Any], p_id: int) -> Dict[str, Any]:
+    """Convert one JSON applicant record into the columns expected by PostgreSQL."""
     program = first_present(record, "program_name_cleaned", "program_name")
     university = first_present(record, "university_cleaned", "university")
     combined_program = " - ".join(part for part in (university, program) if part)
@@ -132,6 +137,7 @@ def load_applicants(input_path: Path, reset: bool = False) -> int:
             cur.execute(CREATE_TABLE_SQL)
             if reset:
                 cur.execute("TRUNCATE applicants;")
+            # executemany keeps the load logic simple while still using parameterized SQL.
             cur.executemany(INSERT_SQL, normalized_records)
         conn.commit()
 

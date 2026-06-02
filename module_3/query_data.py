@@ -13,6 +13,8 @@ class AnalysisQuestion:
     value_field: str = "answer"
 
 
+# The list below is the single source of truth for console output, the Flask page,
+# and the generated PDF report.
 ANALYSIS_QUESTIONS: List[AnalysisQuestion] = [
     AnalysisQuestion(
         "fall_2026_count",
@@ -195,6 +197,7 @@ ANALYSIS_QUESTIONS: List[AnalysisQuestion] = [
 
 
 def format_result(question: AnalysisQuestion, row: Optional[Dict[str, Any]], rows: List[Dict[str, Any]]) -> str:
+    """Turn raw SQL rows into short answers that read well in all outputs."""
     if question.value_field == "summary" and row:
         return (
             f"GPA: {row['avg_gpa']}, GRE Q: {row['avg_gre']}, "
@@ -215,6 +218,7 @@ def format_result(question: AnalysisQuestion, row: Optional[Dict[str, Any]], row
 
 def run_query(question: AnalysisQuestion) -> Dict[str, Any]:
     require_psycopg()
+    # dict_row lets templates and PDF generation use column names instead of indexes.
     dict_row = __import__("psycopg.rows", fromlist=["dict_row"]).dict_row
     with connect(row_factory=dict_row) as conn:
         with conn.cursor() as cur:
