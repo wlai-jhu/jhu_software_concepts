@@ -1,3 +1,4 @@
+import json
 import subprocess
 import sys
 import threading
@@ -24,6 +25,36 @@ pull_state = {
 }
 
 
+def seed_scrape_output(scrape_output: Path) -> None:
+    if not SUBMITTED_DATA_PATH.exists():
+        return
+
+    scrape_output.parent.mkdir(parents=True, exist_ok=True)
+    if not scrape_output.exists():
+        shutil.copyfile(SUBMITTED_DATA_PATH, scrape_output)
+        return
+
+    submitted_records = json.loads(SUBMITTED_DATA_PATH.read_text(encoding="utf-8"))
+    existing_records = json.loads(scrape_output.read_text(encoding="utf-8"))
+    submitted_by_url = {
+        record.get("entry_url"): record
+        for record in submitted_records
+        if record.get("entry_url")
+    }
+    merged_records = list(submitted_records)
+    seen_urls = set(submitted_by_url)
+    for record in existing_records:
+        entry_url = record.get("entry_url")
+        if entry_url and entry_url not in seen_urls:
+            merged_records.append(record)
+            seen_urls.add(entry_url)
+
+    submitted_comments = sum(1 for record in submitted_records if (record.get("comments") or "").strip())
+    existing_comments = sum(1 for record in existing_records if (record.get("comments") or "").strip())
+    if len(merged_records) > len(existing_records) or submitted_comments > existing_comments:
+        scrape_output.write_text(json.dumps(merged_records, indent=2), encoding="utf-8")
+
+
 def run_data_pull() -> None:
     with pull_lock:
         pull_state["running"] = True
@@ -33,14 +64,10 @@ def run_data_pull() -> None:
         scrape_output = PIPELINE_DIR / "data" / "raw_applicant_data.json"
         cleaned_output = PIPELINE_DIR / "applicant_data.json"
         llm_output = PIPELINE_DIR / "llm_extend_applicant_data.json"
-        if not scrape_output.exists() and SUBMITTED_DATA_PATH.exists():
-            scrape_output.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(SUBMITTED_DATA_PATH, scrape_output)
+        seed_scrape_output(scrape_output)
 
         existing_records = 0
         if scrape_output.exists():
-            import json
-
             existing_records = len(json.loads(scrape_output.read_text(encoding="utf-8")))
         target_records = max(existing_records + 1000, 1000)
         commands = [

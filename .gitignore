@@ -6,3 +6,6 @@ __pycache__/
 module_2/models/
 module_2/data/
 module_3/pipeline/data/
+module_3/pipeline/evidence/
+module_3/pipeline/applicant_data.json
+module_3/pipeline/llm_extend_applicant_data.json
