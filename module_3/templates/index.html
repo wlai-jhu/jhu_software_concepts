@@ -30,19 +30,25 @@
         <div class="title-copy">
           <p class="eyebrow">Module 3 SQL + Flask</p>
           <h1>Grad Cafe Data Analysis</h1>
-          <div class="inline-messages" aria-live="polite">
+          <div id="analysis-status" class="inline-messages" aria-live="polite">
             {% with messages = get_flashed_messages() %}
               {% if messages %}
                 {% for message in messages %}
                   <p>{{ message }}</p>
                 {% endfor %}
+              {% elif pull_state.state == "running" %}
+                <p>Pull Data is running. Update Analysis will be ready after the Database Refresh status turns green.</p>
+              {% elif pull_state.state == "ready" %}
+                <p>Pull Data is complete. Click Update Analysis to refresh the query results below.</p>
+              {% elif pull_state.state == "error" %}
+                <p>Pull Data stopped before completing. Review the Database Refresh message before updating the analysis.</p>
               {% else %}
-                <p>&nbsp;</p>
+                <p>Analysis results are loaded. After Pull Data turns green, click Update Analysis to refresh these results.</p>
               {% endif %}
             {% endwith %}
           </div>
         </div>
-        <form class="toolbar-action" action="{{ url_for('update_analysis') }}" method="post">
+        <form id="update-analysis-form" class="toolbar-action" action="{{ url_for('update_analysis') }}" method="post">
           <button id="update-analysis-button"
                   class="secondary {% if pull_state.state == 'ready' %}analysis-ready{% endif %}"
                   type="submit">
@@ -67,7 +73,7 @@
             {{ pull_state.message }}
           </p>
         </div>
-        <form class="panel-action" action="{{ url_for('pull_data') }}" method="post">
+        <form id="pull-data-form" class="panel-action" action="{{ url_for('pull_data') }}" method="post">
           <button id="pull-data-button" type="submit" {% if pull_state.running %}disabled{% endif %}>Pull Data</button>
         </form>
       </section>
@@ -102,12 +108,30 @@
       <p>Johns Hopkins University | Whiting School of Engineering | EN.605.256: Modern Software Concepts in Python | Summer 2026</p>
     </footer>
     <script>
+      const analysisStatus = document.getElementById("analysis-status");
+      const pullForm = document.getElementById("pull-data-form");
       const pullStatus = document.getElementById("pull-status");
       const pullButton = document.getElementById("pull-data-button");
+      const updateForm = document.getElementById("update-analysis-form");
       const updateButton = document.getElementById("update-analysis-button");
+      let pullStatusTimer = null;
+
+      function setAnalysisMessage(message) {
+        analysisStatus.innerHTML = `<p>${message}</p>`;
+      }
 
       function highlightNextStep(state) {
         updateButton.classList.toggle("analysis-ready", state === "ready");
+      }
+
+      function renderAnalysisStatus(status) {
+        if (status.running) {
+          setAnalysisMessage("Pull Data is running. Update Analysis will be ready after the Database Refresh status turns green.");
+        } else if (status.state === "ready") {
+          setAnalysisMessage("Pull Data is complete. Click Update Analysis to refresh the query results below.");
+        } else if (status.state === "error") {
+          setAnalysisMessage("Pull Data stopped before completing. Review the Database Refresh message before updating the analysis.");
+        }
       }
 
       function renderPullStatus(status) {
@@ -117,6 +141,7 @@
         pullStatus.className = `status status-${status.state}`;
         pullButton.disabled = status.running;
         highlightNextStep(status.state);
+        renderAnalysisStatus(status);
       }
 
       async function pollPullStatus() {
@@ -127,18 +152,40 @@
           }
           const status = await response.json();
           renderPullStatus(status);
-          if (status.running) {
-            window.setTimeout(pollPullStatus, 4000);
+          if (!status.running && (status.state === "ready" || status.state === "error")) {
+            stopPullStatusPolling();
           }
-        } catch (error) {
-          window.setTimeout(pollPullStatus, 8000);
+        } catch (error) {}
+      }
+
+      function startPullStatusPolling() {
+        window.sessionStorage.setItem("watchPullData", "true");
+        pollPullStatus();
+        if (!pullStatusTimer) {
+          pullStatusTimer = window.setInterval(pollPullStatus, 4000);
         }
       }
 
-      if (pullStatus.dataset.running === "true") {
-        window.setTimeout(pollPullStatus, 2000);
+      function stopPullStatusPolling() {
+        window.sessionStorage.removeItem("watchPullData");
+        if (pullStatusTimer) {
+          window.clearInterval(pullStatusTimer);
+          pullStatusTimer = null;
+        }
       }
+
+      pullForm.addEventListener("submit", () => {
+        window.sessionStorage.setItem("watchPullData", "true");
+      });
+
+      updateForm.addEventListener("submit", () => {
+        stopPullStatusPolling();
+      });
+
       highlightNextStep(pullStatus.dataset.state);
+      if (pullStatus.dataset.running === "true" || window.sessionStorage.getItem("watchPullData") === "true") {
+        startPullStatusPolling();
+      }
     </script>
   </body>
 </html>
