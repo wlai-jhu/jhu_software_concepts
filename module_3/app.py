@@ -197,21 +197,28 @@ def pull_data():
             flash("A data pull is already running. Update Analysis will wait until it finishes.")
             return redirect(url_for("index"))
 
+        pull_state["running"] = True
+        pull_state["message"] = "Pull Data is running. This can take a while because Grad Cafe requests are delayed."
+        pull_state["state"] = "running"
         thread = threading.Thread(target=run_data_pull, daemon=True)
         thread.start()
 
-    flash("Pull Data started. The page will show the latest status when refreshed.")
+    flash("Pull Data started. This page will refresh automatically until the pull finishes.")
     return redirect(url_for("index"))
 
 
 @app.post("/update-analysis")
 def update_analysis():
-    if pull_state["running"]:
+    with pull_lock:
+        is_running = pull_state["running"]
+
+    if is_running:
         flash("Analysis was not updated because Pull Data is still running.")
     else:
         flash("Analysis refreshed with the latest database results.")
-        pull_state["state"] = "idle"
-        pull_state["message"] = "Analysis is up to date."
+        with pull_lock:
+            pull_state["state"] = "idle"
+            pull_state["message"] = "Analysis is up to date."
     return redirect(url_for("index"))
 
 
