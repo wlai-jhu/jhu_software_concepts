@@ -56,7 +56,7 @@
             applicants table. Update Analysis refreshes this page with the current query
             results when no data pull is running.
           </p>
-          <p class="status {% if pull_state.running %}running{% endif %}">
+          <p class="status status-{{ pull_state.state }}">
             {{ pull_state.message }}
           </p>
         </div>

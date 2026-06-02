@@ -218,13 +218,49 @@ button.secondary {
 }
 
 .status {
+  align-items: flex-start;
   color: var(--blue-dark);
+  display: flex;
+  gap: 9px;
   font-weight: 700;
   overflow-wrap: anywhere;
 }
 
-.status.running {
+.status::before {
+  border-radius: 50%;
+  content: "";
+  flex: 0 0 auto;
+  height: 12px;
+  margin-top: 8px;
+  width: 12px;
+}
+
+.status-idle::before {
+  background: var(--muted);
+}
+
+.status-running {
   color: var(--warn);
+}
+
+.status-running::before {
+  background: var(--warn);
+}
+
+.status-ready {
+  color: var(--green);
+}
+
+.status-ready::before {
+  background: var(--green);
+}
+
+.status-error {
+  color: var(--red);
+}
+
+.status-error::before {
+  background: var(--red);
 }
 
 .inline-messages {

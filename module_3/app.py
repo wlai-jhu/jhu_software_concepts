@@ -23,6 +23,7 @@ pull_lock = threading.Lock()
 pull_state = {
     "running": False,
     "message": "No data pull is currently running.",
+    "state": "idle",
 }
 
 
@@ -67,6 +68,7 @@ def run_data_pull() -> None:
     with pull_lock:
         pull_state["running"] = True
         pull_state["message"] = "Pull Data is running. This can take a while because Grad Cafe requests are delayed."
+        pull_state["state"] = "running"
 
     try:
         scrape_output = PIPELINE_DIR / "data" / "raw_applicant_data.json"
@@ -156,13 +158,19 @@ def run_data_pull() -> None:
             )
 
         loaded = load_applicants(load_path, reset=True)
-        message = f"Pull Data finished and reloaded {loaded:,} records into PostgreSQL. {llm_message}"
+        message = (
+            f"Pull Data finished and reloaded {loaded:,} records into PostgreSQL. "
+            f"{llm_message} Click Update Analysis to refresh the displayed results."
+        )
+        state = "ready"
     except Exception as exc:
         message = f"Pull Data stopped: {exc}"
+        state = "error"
 
     with pull_lock:
         pull_state["running"] = False
         pull_state["message"] = message
+        pull_state["state"] = state
 
 
 @app.route("/")
@@ -202,6 +210,8 @@ def update_analysis():
         flash("Analysis was not updated because Pull Data is still running.")
     else:
         flash("Analysis refreshed with the latest database results.")
+        pull_state["state"] = "idle"
+        pull_state["message"] = "Analysis is up to date."
     return redirect(url_for("index"))
 
 
