@@ -1,4 +1,5 @@
 import json
+import importlib.util
 import subprocess
 import sys
 import threading
@@ -53,6 +54,13 @@ def seed_scrape_output(scrape_output: Path) -> None:
     existing_comments = sum(1 for record in existing_records if (record.get("comments") or "").strip())
     if len(merged_records) > len(existing_records) or submitted_comments > existing_comments:
         scrape_output.write_text(json.dumps(merged_records, indent=2), encoding="utf-8")
+
+
+def llm_dependencies_available() -> bool:
+    return all(
+        importlib.util.find_spec(package_name) is not None
+        for package_name in ("huggingface_hub", "llama_cpp")
+    )
 
 
 def run_data_pull() -> None:
@@ -122,23 +130,25 @@ def run_data_pull() -> None:
         load_path = cleaned_output
         llm_message = "Downloaded fields and comments were refreshed; LLM fields were not regenerated."
         try:
-            subprocess.run(
-                [
-                    sys.executable,
-                    str(PIPELINE_DIR / "llm_clean.py"),
-                    "--input",
-                    str(cleaned_output),
-                    "--output",
-                    str(llm_output),
-                    "--resume-llm",
-                    "--llm-batch-size",
-                    "1000",
-                ],
-                cwd=PIPELINE_DIR,
-                check=True,
-            )
+            llm_command = [
+                sys.executable,
+                str(PIPELINE_DIR / "llm_clean.py"),
+                "--input",
+                str(cleaned_output),
+                "--output",
+                str(llm_output),
+            ]
+            if llm_dependencies_available():
+                llm_command.extend(["--resume-llm", "--llm-batch-size", "1000"])
+                llm_message = "Downloaded, comment, and LLM-generated fields were refreshed."
+            else:
+                llm_command.append("--skip-llm-run")
+                llm_message = (
+                    "Downloaded fields and comments were refreshed. Optional local LLM packages "
+                    "are not installed, so deterministic fallback LLM fields were used."
+                )
+            subprocess.run(llm_command, cwd=PIPELINE_DIR, check=True)
             load_path = llm_output
-            llm_message = "Downloaded and LLM-generated fields were refreshed."
         except Exception as exc:
             llm_message = (
                 "Downloaded fields and comments were refreshed. LLM regeneration did not complete, "
