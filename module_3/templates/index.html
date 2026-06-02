@@ -3,9 +3,6 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    {% if pull_state.running %}
-      <meta http-equiv="refresh" content="8">
-    {% endif %}
     <title>Grad Cafe Data Analysis</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   </head>
@@ -46,7 +43,11 @@
           </div>
         </div>
         <form class="toolbar-action" action="{{ url_for('update_analysis') }}" method="post">
-          <button class="secondary" type="submit">Update Analysis</button>
+          <button id="update-analysis-button"
+                  class="secondary {% if pull_state.state == 'ready' %}analysis-ready{% endif %}"
+                  type="submit">
+            Update Analysis
+          </button>
         </form>
       </section>
 
@@ -59,12 +60,15 @@
             applicants table. Update Analysis refreshes this page with the current query
             results when no data pull is running.
           </p>
-          <p class="status status-{{ pull_state.state }}">
+          <p id="pull-status"
+             class="status status-{{ pull_state.state }}"
+             data-state="{{ pull_state.state }}"
+             data-running="{{ 'true' if pull_state.running else 'false' }}">
             {{ pull_state.message }}
           </p>
         </div>
         <form class="panel-action" action="{{ url_for('pull_data') }}" method="post">
-          <button type="submit" {% if pull_state.running %}disabled{% endif %}>Pull Data</button>
+          <button id="pull-data-button" type="submit" {% if pull_state.running %}disabled{% endif %}>Pull Data</button>
         </form>
       </section>
 
@@ -97,5 +101,44 @@
     <footer class="site-footer">
       <p>Johns Hopkins University | Whiting School of Engineering | EN.605.256: Modern Software Concepts in Python | Summer 2026</p>
     </footer>
+    <script>
+      const pullStatus = document.getElementById("pull-status");
+      const pullButton = document.getElementById("pull-data-button");
+      const updateButton = document.getElementById("update-analysis-button");
+
+      function highlightNextStep(state) {
+        updateButton.classList.toggle("analysis-ready", state === "ready");
+      }
+
+      function renderPullStatus(status) {
+        pullStatus.textContent = status.message;
+        pullStatus.dataset.state = status.state;
+        pullStatus.dataset.running = status.running ? "true" : "false";
+        pullStatus.className = `status status-${status.state}`;
+        pullButton.disabled = status.running;
+        highlightNextStep(status.state);
+      }
+
+      async function pollPullStatus() {
+        try {
+          const response = await fetch("{{ url_for('pull_status') }}", { cache: "no-store" });
+          if (!response.ok) {
+            return;
+          }
+          const status = await response.json();
+          renderPullStatus(status);
+          if (status.running) {
+            window.setTimeout(pollPullStatus, 4000);
+          }
+        } catch (error) {
+          window.setTimeout(pollPullStatus, 8000);
+        }
+      }
+
+      if (pullStatus.dataset.running === "true") {
+        window.setTimeout(pollPullStatus, 2000);
+      }
+      highlightNextStep(pullStatus.dataset.state);
+    </script>
   </body>
 </html>

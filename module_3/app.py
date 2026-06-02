@@ -6,7 +6,7 @@ import threading
 import shutil
 from pathlib import Path
 
-from flask import Flask, flash, redirect, render_template, url_for
+from flask import Flask, flash, jsonify, redirect, render_template, url_for
 
 from load_data import load_applicants
 from query_data import run_all_queries
@@ -160,7 +160,7 @@ def run_data_pull() -> None:
         loaded = load_applicants(load_path, reset=True)
         message = (
             f"Pull Data finished and reloaded {loaded:,} records into PostgreSQL. "
-            f"{llm_message} Click Update Analysis to refresh the displayed results."
+            f"{llm_message} Next step: click Update Analysis to refresh the displayed results."
         )
         state = "ready"
     except Exception as exc:
@@ -205,6 +205,13 @@ def pull_data():
 
     flash("Pull Data started. This page will refresh automatically until the pull finishes.")
     return redirect(url_for("index"))
+
+
+@app.get("/pull-status")
+def pull_status():
+    with pull_lock:
+        status = pull_state.copy()
+    return jsonify(status)
 
 
 @app.post("/update-analysis")

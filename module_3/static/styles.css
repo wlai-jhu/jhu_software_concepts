@@ -219,11 +219,14 @@ button.secondary {
 
 .status {
   align-items: flex-start;
+  border: 1px solid transparent;
+  border-radius: 6px;
   color: var(--blue-dark);
   display: flex;
   gap: 9px;
   font-weight: 700;
   overflow-wrap: anywhere;
+  padding: 6px 8px;
 }
 
 .status::before {
@@ -239,7 +242,7 @@ button.secondary {
   background: var(--muted);
 }
 
-.status-running {
+.actions .status-running {
   color: var(--warn);
 }
 
@@ -247,7 +250,9 @@ button.secondary {
   background: var(--warn);
 }
 
-.status-ready {
+.actions .status-ready {
+  background: #e8f5ed;
+  border-color: #acd7bd;
   color: var(--green);
 }
 
@@ -255,7 +260,9 @@ button.secondary {
   background: var(--green);
 }
 
-.status-error {
+.actions .status-error {
+  background: #fbeeee;
+  border-color: #e8bbbb;
   color: var(--red);
 }
 
@@ -273,6 +280,12 @@ button.secondary {
 .inline-messages p {
   margin-bottom: 0;
   overflow-wrap: anywhere;
+}
+
+.toolbar-action .analysis-ready {
+  background: var(--green);
+  border-color: var(--green);
+  color: #ffffff;
 }
 
 .error {
