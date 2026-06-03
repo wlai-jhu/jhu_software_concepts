@@ -45,13 +45,16 @@ ANALYSIS_QUESTIONS: List[AnalysisQuestion] = [
         "What are the average GPA, GRE, GRE V, and GRE AW values?",
         """
         SELECT
-            ROUND(AVG(gpa)::numeric, 2) AS avg_gpa,
-            ROUND(AVG(gre)::numeric, 2) AS avg_gre,
-            ROUND(AVG(gre_v)::numeric, 2) AS avg_gre_v,
-            ROUND(AVG(gre_aw)::numeric, 2) AS avg_gre_aw
+            ROUND(AVG(gpa) FILTER (WHERE gpa BETWEEN 0 AND 4.33)::numeric, 2) AS avg_gpa,
+            ROUND(AVG(gre) FILTER (WHERE gre BETWEEN 130 AND 170)::numeric, 2) AS avg_gre,
+            ROUND(AVG(gre_v) FILTER (WHERE gre_v BETWEEN 130 AND 170)::numeric, 2) AS avg_gre_v,
+            ROUND(AVG(gre_aw) FILTER (WHERE gre_aw BETWEEN 0 AND 6)::numeric, 2) AS avg_gre_aw
         FROM applicants;
         """,
-        "Uses AVG, which ignores NULL values, so only applicants who provided each metric contribute to that metric.",
+        (
+            "Averages only provided values that fall on the expected reporting scales: "
+            "GPA 0-4.33, GRE Quant and Verbal 130-170, and GRE Analytical Writing 0-6."
+        ),
         value_field="summary",
     ),
     AnalysisQuestion(
@@ -106,7 +109,7 @@ ANALYSIS_QUESTIONS: List[AnalysisQuestion] = [
     ),
     AnalysisQuestion(
         "target_school_phd_cs_acceptances",
-        "How many 2026 acceptances applied to Georgetown, MIT, Stanford, or Carnegie Mellon for a CS PhD?",
+        "How many acceptances with a 2026 application term applied to Georgetown, MIT, Stanford, or Carnegie Mellon for a CS PhD?",
         """
         SELECT COUNT(*) AS answer
         FROM applicants
@@ -122,7 +125,10 @@ ANALYSIS_QUESTIONS: List[AnalysisQuestion] = [
               OR program ILIKE '%Carnegie Mellon University%'
           );
         """,
-        "Uses downloaded fields to count accepted 2026 CS PhD entries at the requested universities.",
+        (
+            "Uses downloaded fields to count accepted CS PhD entries at the requested universities. "
+            "Here, 'from 2026' is interpreted as rows whose application term contains 2026."
+        ),
     ),
     AnalysisQuestion(
         "target_school_phd_cs_acceptances_llm",
@@ -164,7 +170,10 @@ ANALYSIS_QUESTIONS: List[AnalysisQuestion] = [
             downloaded_fields.count <> llm_fields.count AS changed
         FROM downloaded_fields, llm_fields;
         """,
-        "Compares the downloaded-field count from question 8 with the same count using standardized LLM program and university fields.",
+        (
+            "Compares the downloaded-field count from question 8 with the same 2026-term count "
+            "using standardized LLM program and university fields."
+        ),
         value_field="comparison",
     ),
     AnalysisQuestion(

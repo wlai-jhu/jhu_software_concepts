@@ -71,11 +71,20 @@ By default, this loads:
 ../module_2/llm_extend_applicant_data.json
 ```
 
+Use `--reset` for the cleanest full reload. If you load without `--reset`,
+`load_data.py` assigns new `p_id` values after the current database maximum and
+uses each Grad Cafe URL to update existing rows instead of creating duplicates.
+
 ## Run SQL Analysis
 
 ```bash
 python query_data.py
 ```
+
+The metric-average query filters self-reported values to expected reporting
+ranges before averaging: GPA `0-4.33`, GRE Quant and Verbal `130-170`, and GRE
+Analytical Writing `0-6`. This avoids mixing malformed or old-scale values into
+the displayed averages.
 
 To create the PDF with query answers, SQL, and explanations:
 
@@ -117,4 +126,10 @@ python make_limitations_pdf.py
 
 ## Screenshots
 
-After running `query_data.py` and the Flask app, place screenshots of the console output and running webpage in the `screenshots` folder.
+Capture screenshots manually after running `query_data.py` and the Flask app:
+
+- `screenshots/console_query_output.png`: terminal output from `python query_data.py`.
+- `screenshots/webpage_output.pdf`: browser export or screenshot of the running Flask page.
+
+After using `Pull Data`, click `Update Analysis`, rerun `query_data.py`, and
+recapture both screenshot files so the evidence matches the latest database.

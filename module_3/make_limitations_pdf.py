@@ -24,12 +24,14 @@ def build_paragraphs() -> list[str]:
             f"{results['fall_2026_count']} records are Fall 2026 entries, "
             f"{results['fall_2026_acceptance_percent']} percent of Fall 2026 entries are acceptances, "
             f"and {results['original_question_comments']} percent of all rows include comments. "
-            f"The metric averages are {results['metric_averages']}, but the raw GRE field mixes "
-            "different reporting scales, so that unfiltered GRE average should be interpreted with "
-            "extra caution. Similar selection and formatting effects can affect acceptance rates, "
-            "GPA averages, and school-specific counts. The data is still valuable for exploratory "
-            "analysis, but the results describe anonymous self-reported entries, not verified "
-            "admissions outcomes."
+            f"The metric averages are {results['metric_averages']} after filtering to expected "
+            "reporting ranges for GPA, GRE Quant, GRE Verbal, and GRE Analytical Writing. That "
+            "filtering makes the averages more comparable to standard score reporting, but it does "
+            "not solve deeper self-reporting problems because applicants may still omit scores, "
+            "misstate values, or selectively report unusually strong outcomes. Similar selection "
+            "and formatting effects can affect acceptance rates, GPA averages, and school-specific "
+            "counts. The data is still valuable for exploratory analysis, but the results describe "
+            "anonymous self-reported entries, not verified admissions outcomes."
         ),
     ]
 

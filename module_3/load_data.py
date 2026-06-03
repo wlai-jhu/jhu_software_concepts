@@ -128,15 +128,27 @@ def normalize_record(record: Dict[str, Any], p_id: int) -> Dict[str, Any]:
     }
 
 
+def next_available_p_id(cur) -> int:
+    cur.execute("SELECT COALESCE(MAX(p_id), 0) + 1 FROM applicants;")
+    return cur.fetchone()[0]
+
+
 def load_applicants(input_path: Path, reset: bool = False) -> int:
     records = load_json(input_path)
-    normalized_records = [normalize_record(record, index + 1) for index, record in enumerate(records)]
 
     with connect() as conn:
         with conn.cursor() as cur:
             cur.execute(CREATE_TABLE_SQL)
             if reset:
                 cur.execute("TRUNCATE applicants;")
+                first_p_id = 1
+            else:
+                first_p_id = next_available_p_id(cur)
+
+            normalized_records = [
+                normalize_record(record, first_p_id + index)
+                for index, record in enumerate(records)
+            ]
             # executemany keeps the load logic simple while still using parameterized SQL.
             cur.executemany(INSERT_SQL, normalized_records)
         conn.commit()

@@ -1,8 +1,11 @@
-Place the required screenshots here:
+Required screenshot evidence:
 
 1. console_query_output.png
-   Console output from running python query_data.py.
+   Manual terminal screenshot from running python query_data.py.
 
 2. webpage_output.pdf
-   Browser output of the running Flask analysis webpage. This PDF replaces the
-   older segmented webpage_output_1.png through webpage_output_5.png files.
+   Manual browser export or screenshot of the running Flask analysis webpage at
+   http://127.0.0.1:5000.
+
+After Pull Data finishes, click Update Analysis, rerun python query_data.py, and
+recapture both files so the evidence matches the latest database.

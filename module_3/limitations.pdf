@@ -1,6 +1,6 @@
 %PDF-1.4
 1 0 obj
-<< /Length 1936 >>
+<< /Length 2200 >>
 stream
 BT
 /F1 11 Tf
@@ -39,28 +39,34 @@ BT
 () Tj
 0 -14 Td
 /F1 11 Tf
-(The latest SQL run reinforces those limitations. In the current database, 31449 records are) Tj
+(The latest SQL run reinforces those limitations. In the current database, 31458 records are) Tj
 0 -14 Td
 /F1 11 Tf
-(Fall 2026 entries, 37.09 percent of Fall 2026 entries are acceptances, and 47.71 percent of) Tj
+(Fall 2026 entries, 37.09 percent of Fall 2026 entries are acceptances, and 47.70 percent of) Tj
 0 -14 Td
 /F1 11 Tf
-(all rows include comments. The metric averages are GPA: 3.75, GRE Q: 263.61, GRE V: 161.24,) Tj
+(all rows include comments. The metric averages are GPA: 3.75, GRE Q: 165.81, GRE V: 160.41,) Tj
 0 -14 Td
 /F1 11 Tf
-(GRE AW: 4.34, but the raw GRE field mixes different reporting scales, so that unfiltered GRE) Tj
+(GRE AW: 4.34 after filtering to expected reporting ranges for GPA, GRE Quant, GRE Verbal,) Tj
 0 -14 Td
 /F1 11 Tf
-(average should be interpreted with extra caution. Similar selection and formatting effects) Tj
+(and GRE Analytical Writing. That filtering makes the averages more comparable to standard) Tj
 0 -14 Td
 /F1 11 Tf
-(can affect acceptance rates, GPA averages, and school-specific counts. The data is still) Tj
+(score reporting, but it does not solve deeper self-reporting problems because applicants may) Tj
 0 -14 Td
 /F1 11 Tf
-(valuable for exploratory analysis, but the results describe anonymous self-reported entries,) Tj
+(still omit scores, misstate values, or selectively report unusually strong outcomes. Similar) Tj
 0 -14 Td
 /F1 11 Tf
-(not verified admissions outcomes.) Tj
+(selection and formatting effects can affect acceptance rates, GPA averages, and school-) Tj
+0 -14 Td
+/F1 11 Tf
+(specific counts. The data is still valuable for exploratory analysis, but the results) Tj
+0 -14 Td
+/F1 11 Tf
+(describe anonymous self-reported entries, not verified admissions outcomes.) Tj
 0 -14 Td
 /F1 11 Tf
 () Tj
@@ -83,7 +89,7 @@ xref
 0 1001
 0000000000 65535 f 
 0000000009 00000 n 
-0000001997 00000 n 
+0000002261 00000 n 
 0000000000 65535 f 
 0000000000 65535 f 
 0000000000 65535 f 
@@ -1079,11 +1085,11 @@ xref
 0000000000 65535 f 
 0000000000 65535 f 
 0000000000 65535 f 
-0000002127 00000 n 
-0000002199 00000 n 
-0000002258 00000 n 
+0000002391 00000 n 
+0000002463 00000 n 
+0000002522 00000 n 
 trailer
 << /Size 1001 /Root 1000 0 R >>
 startxref
-2312
+2576
 %%EOF

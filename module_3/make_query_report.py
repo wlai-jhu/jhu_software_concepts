@@ -5,7 +5,13 @@ from query_data import run_all_queries
 
 
 def main() -> None:
-    paragraphs = []
+    paragraphs = [
+        (
+            "Interpretation note: for the question asking how many entries are from 2026, "
+            "this report interprets 2026 as the application term/start term containing 2026, "
+            "not the date the Grad Cafe row was added."
+        )
+    ]
     for index, result in enumerate(run_all_queries(), start=1):
         paragraphs.append(f"{index}. {result['question']}")
         paragraphs.append(f"Answer: {result['answer']}")

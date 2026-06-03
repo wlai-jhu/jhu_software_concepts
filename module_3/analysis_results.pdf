@@ -1,6 +1,6 @@
 %PDF-1.4
 1 0 obj
-<< /Length 2730 >>
+<< /Length 2950 >>
 stream
 BT
 /F1 11 Tf
@@ -12,13 +12,25 @@ BT
 () Tj
 0 -14 Td
 /F1 11 Tf
+(Interpretation note: for the question asking how many entries are from 2026, this report) Tj
+0 -14 Td
+/F1 11 Tf
+(interprets 2026 as the application term/start term containing 2026, not the date the Grad) Tj
+0 -14 Td
+/F1 11 Tf
+(Cafe row was added.) Tj
+0 -14 Td
+/F1 11 Tf
+() Tj
+0 -14 Td
+/F1 11 Tf
 (1. How many entries applied for Fall 2026?) Tj
 0 -14 Td
 /F1 11 Tf
 () Tj
 0 -14 Td
 /F1 11 Tf
-(Answer: 31449) Tj
+(Answer: 31459) Tj
 0 -14 Td
 /F1 11 Tf
 () Tj
@@ -42,7 +54,7 @@ BT
 () Tj
 0 -14 Td
 /F1 11 Tf
-(Answer: 46.57) Tj
+(Answer: 46.58) Tj
 0 -14 Td
 /F1 11 Tf
 () Tj
@@ -69,28 +81,34 @@ BT
 () Tj
 0 -14 Td
 /F1 11 Tf
-(Answer: GPA: 3.75, GRE Q: 263.61, GRE V: 161.24, GRE AW: 4.34) Tj
+(Answer: GPA: 3.75, GRE Q: 165.81, GRE V: 160.41, GRE AW: 4.34) Tj
 0 -14 Td
 /F1 11 Tf
 () Tj
 0 -14 Td
 /F1 11 Tf
-(Query used: SELECT ROUND\(AVG\(gpa\)::numeric, 2\) AS avg_gpa, ROUND\(AVG\(gre\)::numeric, 2\) AS) Tj
+(Query used: SELECT ROUND\(AVG\(gpa\) FILTER \(WHERE gpa BETWEEN 0 AND 4.33\)::numeric, 2\) AS) Tj
 0 -14 Td
 /F1 11 Tf
-(avg_gre, ROUND\(AVG\(gre_v\)::numeric, 2\) AS avg_gre_v, ROUND\(AVG\(gre_aw\)::numeric, 2\) AS) Tj
+(avg_gpa, ROUND\(AVG\(gre\) FILTER \(WHERE gre BETWEEN 130 AND 170\)::numeric, 2\) AS avg_gre,) Tj
 0 -14 Td
 /F1 11 Tf
-(avg_gre_aw FROM applicants;) Tj
+(ROUND\(AVG\(gre_v\) FILTER \(WHERE gre_v BETWEEN 130 AND 170\)::numeric, 2\) AS avg_gre_v,) Tj
+0 -14 Td
+/F1 11 Tf
+(ROUND\(AVG\(gre_aw\) FILTER \(WHERE gre_aw BETWEEN 0 AND 6\)::numeric, 2\) AS avg_gre_aw FROM) Tj
+0 -14 Td
+/F1 11 Tf
+(applicants;) Tj
 0 -14 Td
 /F1 11 Tf
 () Tj
 0 -14 Td
 /F1 11 Tf
-(Why this query: Uses AVG, which ignores NULL values, so only applicants who provided each) Tj
+(Why this query: Averages only provided values that fall on the expected reporting scales:) Tj
 0 -14 Td
 /F1 11 Tf
-(metric contribute to that metric.) Tj
+(GPA 0-4.33, GRE Quant and Verbal 130-170, and GRE Analytical Writing 0-6.) Tj
 0 -14 Td
 /F1 11 Tf
 () Tj
@@ -124,7 +142,18 @@ BT
 0 -14 Td
 /F1 11 Tf
 (5. What percent of Fall 2026 entries are acceptances?) Tj
-0 -14 Td
+ET
+endstream
+endobj
+2 0 obj
+<< /Type /Page /Parent 999 0 R /MediaBox [0 0 612 792] /Contents 1 0 R /Resources << /Font << /F1 998 0 R >> >> >>
+endobj
+3 0 obj
+<< /Length 2904 >>
+stream
+BT
+/F1 11 Tf
+72 730 Td
 /F1 11 Tf
 () Tj
 0 -14 Td
@@ -142,18 +171,7 @@ BT
 0 -14 Td
 /F1 11 Tf
 () Tj
-ET
-endstream
-endobj
-2 0 obj
-<< /Type /Page /Parent 999 0 R /MediaBox [0 0 612 792] /Contents 1 0 R /Resources << /Font << /F1 998 0 R >> >> >>
-endobj
-3 0 obj
-<< /Length 3182 >>
-stream
-BT
-/F1 11 Tf
-72 730 Td
+0 -14 Td
 /F1 11 Tf
 (Why this query: Computes the accepted share among Fall 2026 entries.) Tj
 0 -14 Td
@@ -221,10 +239,10 @@ BT
 () Tj
 0 -14 Td
 /F1 11 Tf
-(8. How many 2026 acceptances applied to Georgetown, MIT, Stanford, or Carnegie Mellon for a) Tj
+(8. How many acceptances with a 2026 application term applied to Georgetown, MIT, Stanford,) Tj
 0 -14 Td
 /F1 11 Tf
-(CS PhD?) Tj
+(or Carnegie Mellon for a CS PhD?) Tj
 0 -14 Td
 /F1 11 Tf
 () Tj
@@ -254,10 +272,10 @@ BT
 () Tj
 0 -14 Td
 /F1 11 Tf
-(Why this query: Uses downloaded fields to count accepted 2026 CS PhD entries at the) Tj
+(Why this query: Uses downloaded fields to count accepted CS PhD entries at the requested) Tj
 0 -14 Td
 /F1 11 Tf
-(requested universities.) Tj
+(universities. Here, 'from 2026' is interpreted as rows whose application term contains 2026.) Tj
 0 -14 Td
 /F1 11 Tf
 () Tj
@@ -273,7 +291,18 @@ BT
 0 -14 Td
 /F1 11 Tf
 () Tj
-0 -14 Td
+ET
+endstream
+endobj
+4 0 obj
+<< /Type /Page /Parent 999 0 R /MediaBox [0 0 612 792] /Contents 3 0 R /Resources << /Font << /F1 998 0 R >> >> >>
+endobj
+5 0 obj
+<< /Length 2844 >>
+stream
+BT
+/F1 11 Tf
+72 730 Td
 /F1 11 Tf
 (Query used: WITH downloaded_fields AS \( SELECT COUNT\(*\) AS count FROM applicants WHERE term) Tj
 0 -14 Td
@@ -291,18 +320,7 @@ BT
 0 -14 Td
 /F1 11 Tf
 (FROM applicants WHERE term ILIKE '%2026%' AND status = 'Accepted' AND degree ILIKE 'PhD' AND) Tj
-ET
-endstream
-endobj
-4 0 obj
-<< /Type /Page /Parent 999 0 R /MediaBox [0 0 612 792] /Contents 3 0 R /Resources << /Font << /F1 998 0 R >> >> >>
-endobj
-5 0 obj
-<< /Length 2130 >>
-stream
-BT
-/F1 11 Tf
-72 730 Td
+0 -14 Td
 /F1 11 Tf
 (llm_generated_program ILIKE '%Computer Science%' AND \( llm_generated_university ILIKE) Tj
 0 -14 Td
@@ -328,10 +346,10 @@ BT
 () Tj
 0 -14 Td
 /F1 11 Tf
-(Why this query: Compares the downloaded-field count from question 8 with the same count) Tj
+(Why this query: Compares the downloaded-field count from question 8 with the same 2026-term) Tj
 0 -14 Td
 /F1 11 Tf
-(using standardized LLM program and university fields.) Tj
+(count using standardized LLM program and university fields.) Tj
 0 -14 Td
 /F1 11 Tf
 () Tj
@@ -343,7 +361,7 @@ BT
 () Tj
 0 -14 Td
 /F1 11 Tf
-(Answer: 47.71) Tj
+(Answer: 47.70) Tj
 0 -14 Td
 /F1 11 Tf
 () Tj
@@ -370,7 +388,7 @@ BT
 () Tj
 0 -14 Td
 /F1 11 Tf
-(Answer: Rejected: 21640; Accepted: 19497; Waitlisted: 4835; Interview: 4047) Tj
+(Answer: Rejected: 21644; Accepted: 19503; Waitlisted: 4835; Interview: 4047) Tj
 0 -14 Td
 /F1 11 Tf
 () Tj
@@ -411,11 +429,11 @@ xref
 0 1001
 0000000000 65535 f 
 0000000009 00000 n 
-0000002791 00000 n 
-0000002921 00000 n 
-0000006155 00000 n 
-0000006285 00000 n 
-0000008467 00000 n 
+0000003011 00000 n 
+0000003141 00000 n 
+0000006097 00000 n 
+0000006227 00000 n 
+0000009123 00000 n 
 0000000000 65535 f 
 0000000000 65535 f 
 0000000000 65535 f 
@@ -1407,11 +1425,11 @@ xref
 0000000000 65535 f 
 0000000000 65535 f 
 0000000000 65535 f 
-0000008597 00000 n 
-0000008669 00000 n 
-0000008740 00000 n 
+0000009253 00000 n 
+0000009325 00000 n 
+0000009396 00000 n 
 trailer
 << /Size 1001 /Root 1000 0 R >>
 startxref
-8794
+9450
 %%EOF
