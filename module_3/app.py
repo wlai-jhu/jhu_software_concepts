@@ -1,13 +1,16 @@
 import json
 import importlib.util
+import multiprocessing
 import subprocess
 import sys
 import threading
 import shutil
+from datetime import datetime, time
 from pathlib import Path
 
 from flask import Flask, flash, jsonify, redirect, render_template, url_for
 
+from db import connect
 from load_data import load_applicants
 from query_data import run_all_queries
 
@@ -25,7 +28,41 @@ pull_state = {
     "running": False,
     "message": "No data pull is currently running.",
     "state": "idle",
+    "last_entry_date": None,
+    "last_entry_timestamp": None,
+    "last_entry_label": None,
+    "started_at": None,
 }
+
+
+def recommended_worker_count() -> int:
+    """Use available CPU count to pick a practical concurrent page count."""
+    cpu_count = multiprocessing.cpu_count()
+    return max(4, min(32, cpu_count * 2))
+
+
+def latest_database_entry_date():
+    """Return the newest date_added currently loaded in PostgreSQL."""
+    try:
+        with connect() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT MAX(date_added) FROM applicants;")
+                return cur.fetchone()[0]
+    except Exception:
+        return None
+
+
+def timestamp_for_entry_date(entry_date):
+    """Represent the date-only Grad Cafe field as a timestamp marker for status text."""
+    if entry_date is None:
+        return None
+    return datetime.combine(entry_date, time.min)
+
+
+def display_date(entry_date) -> str:
+    if entry_date is None:
+        return "unknown"
+    return entry_date.strftime("%b %d, %Y")
 
 
 def seed_scrape_output(scrape_output: Path) -> None:
@@ -67,12 +104,7 @@ def llm_dependencies_available() -> bool:
     )
 
 
-def run_data_pull() -> None:
-    with pull_lock:
-        pull_state["running"] = True
-        pull_state["message"] = "Pull Data is running. This can take a while because Grad Cafe requests are delayed."
-        pull_state["state"] = "running"
-
+def perform_data_pull(last_entry_date=None) -> tuple[str, str]:
     try:
         scrape_output = PIPELINE_DIR / "data" / "raw_applicant_data.json"
         cleaned_output = PIPELINE_DIR / "applicant_data.json"
@@ -83,23 +115,28 @@ def run_data_pull() -> None:
         if scrape_output.exists():
             existing_records = len(json.loads(scrape_output.read_text(encoding="utf-8")))
         target_records = max(existing_records + 1000, 1000)
+        parallel_pages = recommended_worker_count()
 
         # The scraper stops early when a fetched batch overlaps with existing URLs, so this
         # target is a ceiling rather than a requirement to scrape another 1,000 records.
+        scrape_command = [
+            sys.executable,
+            str(PIPELINE_DIR / "scrape.py"),
+            "--target",
+            str(target_records),
+            "--delay",
+            "3",
+            "--stop-on-existing",
+            "--parallel-pages",
+            str(parallel_pages),
+            "--output",
+            str(scrape_output),
+        ]
+        if last_entry_date:
+            scrape_command.extend(["--stop-before-date", last_entry_date.isoformat()])
+
         commands = [
-            [
-                sys.executable,
-                str(PIPELINE_DIR / "scrape.py"),
-                "--target",
-                str(target_records),
-                "--delay",
-                "3",
-                "--stop-on-existing",
-                "--parallel-pages",
-                "16",
-                "--output",
-                str(scrape_output),
-            ],
+            scrape_command,
             [
                 sys.executable,
                 str(PIPELINE_DIR / "clean.py"),
@@ -126,7 +163,7 @@ def run_data_pull() -> None:
                 str(existing_records),
                 "--all-records",
                 "--parallel-pages",
-                "16",
+                str(parallel_pages),
                 "--delay",
                 "1",
                 "--progress",
@@ -167,13 +204,29 @@ def run_data_pull() -> None:
             )
 
         loaded = load_applicants(load_path, reset=True)
+        cutoff_message = f" Checked for entries since {display_date(last_entry_date)}."
         message = (
-            f"Pull Data finished and reloaded {loaded:,} records into PostgreSQL. "
-            f"{llm_message} Next step: click Update Analysis to refresh the displayed results."
+            f"Pull Data complete. Reloaded {loaded:,} records. "
+            f"{llm_message}{cutoff_message} Click Update Analysis to refresh results."
         )
         state = "ready"
     except Exception as exc:
         message = f"Pull Data stopped: {exc}"
+        state = "error"
+
+    return message, state
+
+
+def run_data_pull_process(result_queue, last_entry_date) -> None:
+    result_queue.put(perform_data_pull(last_entry_date=last_entry_date))
+
+
+def monitor_data_pull(process, result_queue) -> None:
+    process.join()
+    try:
+        message, state = result_queue.get_nowait()
+    except Exception:
+        message = f"Pull Data stopped: process exited with code {process.exitcode}."
         state = "error"
 
     with pull_lock:
@@ -206,10 +259,27 @@ def pull_data():
             flash("A data pull is already running. Update Analysis will wait until it finishes.")
             return redirect(url_for("index"))
 
+        last_entry_date = latest_database_entry_date()
+        last_entry_timestamp = timestamp_for_entry_date(last_entry_date)
+        started_at = datetime.now().strftime("%b %d, %Y %I:%M %p")
         pull_state["running"] = True
-        pull_state["message"] = "Pull Data is running. This can take a while because Grad Cafe requests are delayed."
+        pull_state["message"] = (
+            f"Pull Data is running. Checking for entries since {display_date(last_entry_date)}."
+        )
         pull_state["state"] = "running"
-        thread = threading.Thread(target=run_data_pull, daemon=True)
+        pull_state["last_entry_date"] = last_entry_date.isoformat() if last_entry_date else None
+        pull_state["last_entry_timestamp"] = (
+            last_entry_timestamp.strftime("%Y-%m-%d %H:%M:%S") if last_entry_timestamp else None
+        )
+        pull_state["last_entry_label"] = display_date(last_entry_date)
+        pull_state["started_at"] = started_at
+        result_queue = multiprocessing.Queue()
+        process = multiprocessing.Process(
+            target=run_data_pull_process,
+            args=(result_queue, last_entry_date),
+        )
+        process.start()
+        thread = threading.Thread(target=monitor_data_pull, args=(process, result_queue), daemon=True)
         thread.start()
 
     flash("Pull Data started. This page will refresh automatically until the pull finishes.")

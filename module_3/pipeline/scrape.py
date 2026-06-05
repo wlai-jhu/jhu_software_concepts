@@ -4,6 +4,7 @@ import re
 import ssl
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import date, datetime
 from html import unescape
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Set, Tuple
@@ -44,6 +45,7 @@ class GradCafeScraper:
         resume: bool = False,
         parallel_pages: int = DEFAULT_PARALLEL_PAGES,
         stop_on_existing: bool = False,
+        stop_before_date: Optional[str] = None,
     ):
         self.target_records = target_records
         self.delay_seconds = delay_seconds
@@ -55,6 +57,7 @@ class GradCafeScraper:
         self.resume = resume
         self.parallel_pages = max(1, parallel_pages)
         self.stop_on_existing = stop_on_existing
+        self.stop_before_date = self._parse_date_value(stop_before_date)
         self.progress_path = self.output_path.with_suffix(".progress.json")
         self.robot_parser = robotparser.RobotFileParser()
         self.robot_parser.set_url(parse.urljoin(BASE_URL, "/robots.txt"))
@@ -112,6 +115,15 @@ class GradCafeScraper:
             for result_page, page_records in batch_results:
                 if not page_records:
                     print(f"No applicant records found on page {result_page}; stopping.")
+                    self.save_data(records)
+                    self.save_progress(page=last_processed_page, record_count=len(records))
+                    return records
+
+                if self._page_is_before_stop_date(page_records):
+                    print(
+                        f"Page {result_page} is older than cutoff date "
+                        f"{self.stop_before_date.isoformat()}; stopping incremental scrape."
+                    )
                     self.save_data(records)
                     self.save_progress(page=last_processed_page, record_count=len(records))
                     return records
@@ -261,6 +273,27 @@ class GradCafeScraper:
         text = unescape(str(value)).lower()
         text = re.sub(r"[^a-z0-9.]+", " ", text)
         return re.sub(r"\s+", " ", text).strip()
+
+    def _parse_date_value(self, value: Optional[str]) -> Optional[date]:
+        if not value:
+            return None
+        for date_format in ("%B %d, %Y", "%b %d, %Y", "%Y-%m-%d", "%m/%d/%Y", "%m/%d/%y"):
+            try:
+                return datetime.strptime(value, date_format).date()
+            except ValueError:
+                continue
+        return None
+
+    def _page_is_before_stop_date(self, records: List[Dict[str, Optional[str]]]) -> bool:
+        if self.stop_before_date is None:
+            return False
+
+        parsed_dates = [
+            parsed_date
+            for parsed_date in (self._parse_date_value(record.get("date_added")) for record in records)
+            if parsed_date is not None
+        ]
+        return bool(parsed_dates) and max(parsed_dates) < self.stop_before_date
 
     def _deduplicate_records(
         self,
@@ -579,6 +612,13 @@ def main() -> None:
         default=DEFAULT_PARALLEL_PAGES,
         help="Fetch this many survey pages concurrently.",
     )
+    parser.add_argument(
+        "--stop-before-date",
+        help=(
+            "Stop incremental scraping once a page's newest date_added is before this date "
+            "(YYYY-MM-DD, May 27, 2026, or similar)."
+        ),
+    )
     args = parser.parse_args()
 
     scraper = GradCafeScraper(
@@ -592,6 +632,7 @@ def main() -> None:
         resume=args.resume,
         parallel_pages=args.parallel_pages,
         stop_on_existing=args.stop_on_existing,
+        stop_before_date=args.stop_before_date,
     )
 
     allowed = scraper.check_robots()

@@ -37,7 +37,7 @@
                   <p>{{ message }}</p>
                 {% endfor %}
               {% elif pull_state.state == "running" %}
-                <p>Pull Data is running. Update Analysis will be ready after the Database Refresh status turns green.</p>
+                <p>Pull Data is running. Update Analysis will be ready when it finishes.</p>
               {% elif pull_state.state == "ready" %}
                 <p>Pull Data is complete. Click Update Analysis to refresh the query results below.</p>
               {% elif pull_state.state == "error" %}
@@ -71,6 +71,16 @@
              data-state="{{ pull_state.state }}"
              data-running="{{ 'true' if pull_state.running else 'false' }}">
             {{ pull_state.message }}
+          </p>
+          <p id="pull-meta" class="pull-meta">
+            {% if pull_state.last_entry_label %}
+              Last saved entry: {{ pull_state.last_entry_label }}.
+            {% else %}
+              Last saved entry will be checked when Pull Data starts.
+            {% endif %}
+            {% if pull_state.started_at %}
+              Started: {{ pull_state.started_at }}.
+            {% endif %}
           </p>
         </div>
         <form id="pull-data-form" class="panel-action" action="{{ url_for('pull_data') }}" method="post">
@@ -111,6 +121,7 @@
       const analysisStatus = document.getElementById("analysis-status");
       const pullForm = document.getElementById("pull-data-form");
       const pullStatus = document.getElementById("pull-status");
+      const pullMeta = document.getElementById("pull-meta");
       const pullButton = document.getElementById("pull-data-button");
       const updateForm = document.getElementById("update-analysis-form");
       const updateButton = document.getElementById("update-analysis-button");
@@ -126,7 +137,7 @@
 
       function renderAnalysisStatus(status) {
         if (status.running) {
-          setAnalysisMessage("Pull Data is running. Update Analysis will be ready after the Database Refresh status turns green.");
+          setAnalysisMessage("Pull Data is running. Update Analysis will be ready when it finishes.");
         } else if (status.state === "ready") {
           setAnalysisMessage("Pull Data is complete. Click Update Analysis to refresh the query results below.");
         } else if (status.state === "error") {
@@ -139,6 +150,9 @@
         pullStatus.dataset.state = status.state;
         pullStatus.dataset.running = status.running ? "true" : "false";
         pullStatus.className = `status status-${status.state}`;
+        const lastEntry = status.last_entry_label || "unknown";
+        const startedAt = status.started_at ? ` Started: ${status.started_at}.` : "";
+        pullMeta.textContent = `Last saved entry: ${lastEntry}.${startedAt}`;
         pullButton.disabled = status.running;
         highlightNextStep(status.state);
         renderAnalysisStatus(status);

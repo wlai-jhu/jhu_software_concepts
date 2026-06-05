@@ -270,6 +270,13 @@ button.secondary {
   background: var(--red);
 }
 
+.pull-meta {
+  color: var(--muted);
+  font-size: 0.92rem;
+  margin: 8px 0 0;
+  overflow-wrap: anywhere;
+}
+
 .inline-messages {
   color: var(--blue-dark);
   font-weight: 700;
