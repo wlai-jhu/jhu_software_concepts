@@ -24,6 +24,16 @@ def test_pull_data_returns_ok_and_uses_scraper_rows():
 
 
 @pytest.mark.buttons
+def test_pull_data_browser_form_redirects_to_analysis_page():
+    app = create_app(scraper=lambda: [], loader=lambda rows: 0)
+
+    response = app.test_client().post("/pull-data", headers={"Accept": "text/html"})
+
+    assert response.status_code == 302
+    assert response.headers["Location"] == "/analysis"
+
+
+@pytest.mark.buttons
 def test_update_analysis_returns_ok_when_not_busy():
     app = create_app(testing=True)
 
@@ -31,6 +41,16 @@ def test_update_analysis_returns_ok_when_not_busy():
 
     assert response.status_code == 200
     assert response.get_json() == {"ok": True}
+
+
+@pytest.mark.buttons
+def test_update_analysis_browser_form_redirects_to_analysis_page():
+    app = create_app()
+
+    response = app.test_client().post("/update-analysis", headers={"Accept": "text/html"})
+
+    assert response.status_code == 302
+    assert response.headers["Location"] == "/analysis"
 
 
 @pytest.mark.buttons
