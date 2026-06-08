@@ -70,8 +70,20 @@
 <li class="toctree-l3"><a class="reference internal" href="#src.query_data.format_result"><code class="docutils literal notranslate"><span class="pre">format_result()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#pipeline-scrape-script">Pipeline Scrape Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#pipeline-clean-script">Pipeline Clean Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.pipeline.scrape">Pipeline Scrape Script</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.pipeline.scrape.GradCafeScraper"><code class="docutils literal notranslate"><span class="pre">GradCafeScraper</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#src.pipeline.scrape.GradCafeScraper.build_url"><code class="docutils literal notranslate"><span class="pre">GradCafeScraper.build_url()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.pipeline.scrape.GradCafeScraper.check_robots"><code class="docutils literal notranslate"><span class="pre">GradCafeScraper.check_robots()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.pipeline.scrape.GradCafeScraper.load_existing_data"><code class="docutils literal notranslate"><span class="pre">GradCafeScraper.load_existing_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.pipeline.scrape.GradCafeScraper.save_data"><code class="docutils literal notranslate"><span class="pre">GradCafeScraper.save_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.pipeline.scrape.GradCafeScraper.save_progress"><code class="docutils literal notranslate"><span class="pre">GradCafeScraper.save_progress()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#src.pipeline.scrape.GradCafeScraper.scrape_data"><code class="docutils literal notranslate"><span class="pre">GradCafeScraper.scrape_data()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#src.pipeline.scrape.ScrapeStopError"><code class="docutils literal notranslate"><span class="pre">ScrapeStopError</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.pipeline.clean">Pipeline Clean Script</a></li>
 </ul>
 </li>
 </ul>
@@ -186,15 +198,59 @@
 </dd></dl>
 
 </section>
-<section id="pipeline-scrape-script">
-<h2>Pipeline Scrape Script<a class="headerlink" href="#pipeline-scrape-script" title="Link to this heading"></a></h2>
-<p>The original scraper script is retained under <code class="docutils literal notranslate"><span class="pre">src/pipeline/scrape.py</span></code> for
-the Grad Cafe data collection workflow.</p>
+<section id="module-src.pipeline.scrape">
+<span id="pipeline-scrape-script"></span><h2>Pipeline Scrape Script<a class="headerlink" href="#module-src.pipeline.scrape" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.pipeline.scrape.GradCafeScraper">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">src.pipeline.scrape.</span></span><span class="sig-name descname"><span class="pre">GradCafeScraper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_records</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">50000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay_seconds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'data/raw_applicant_data.json'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_selenium</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_retries</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backoff_seconds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_page</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resume</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel_pages</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_on_existing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_before_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/pipeline/scrape.html#GradCafeScraper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.pipeline.scrape.GradCafeScraper" title="Link to this definition"></a></dt>
+<dd><p>Polite Grad Cafe scraper that checks robots.txt before collecting data.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.pipeline.scrape.GradCafeScraper.build_url">
+<span class="sig-name descname"><span class="pre">build_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">page</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/src/pipeline/scrape.html#GradCafeScraper.build_url"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.pipeline.scrape.GradCafeScraper.build_url" title="Link to this definition"></a></dt>
+<dd><p>Build a Grad Cafe results URL with urllib.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.pipeline.scrape.GradCafeScraper.check_robots">
+<span class="sig-name descname"><span class="pre">check_robots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evidence_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'evidence/robots_check.txt'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/src/pipeline/scrape.html#GradCafeScraper.check_robots"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.pipeline.scrape.GradCafeScraper.check_robots" title="Link to this definition"></a></dt>
+<dd><p>Fetch robots.txt, save evidence, and confirm the survey URL is allowed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.pipeline.scrape.GradCafeScraper.load_existing_data">
+<span class="sig-name descname"><span class="pre">load_existing_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/src/pipeline/scrape.html#GradCafeScraper.load_existing_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.pipeline.scrape.GradCafeScraper.load_existing_data" title="Link to this definition"></a></dt>
+<dd><p>Load existing output records for resume mode.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.pipeline.scrape.GradCafeScraper.save_data">
+<span class="sig-name descname"><span class="pre">save_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">records</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/src/pipeline/scrape.html#GradCafeScraper.save_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.pipeline.scrape.GradCafeScraper.save_data" title="Link to this definition"></a></dt>
+<dd><p>Save raw scraped records as valid JSON.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.pipeline.scrape.GradCafeScraper.save_progress">
+<span class="sig-name descname"><span class="pre">save_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">page</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/src/pipeline/scrape.html#GradCafeScraper.save_progress"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.pipeline.scrape.GradCafeScraper.save_progress" title="Link to this definition"></a></dt>
+<dd><p>Save the last successfully processed page for resume mode.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.pipeline.scrape.GradCafeScraper.scrape_data">
+<span class="sig-name descname"><span class="pre">scrape_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/src/pipeline/scrape.html#GradCafeScraper.scrape_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.pipeline.scrape.GradCafeScraper.scrape_data" title="Link to this definition"></a></dt>
+<dd><p>Pull applicant data from Grad Cafe until target_records or stop condition.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="src.pipeline.scrape.ScrapeStopError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">src.pipeline.scrape.</span></span><span class="sig-name descname"><span class="pre">ScrapeStopError</span></span><a class="reference internal" href="_modules/src/pipeline/scrape.html#ScrapeStopError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.pipeline.scrape.ScrapeStopError" title="Link to this definition"></a></dt>
+<dd><p>Raised when the scraper should stop politely and keep partial results.</p>
+</dd></dl>
+
 </section>
-<section id="pipeline-clean-script">
-<h2>Pipeline Clean Script<a class="headerlink" href="#pipeline-clean-script" title="Link to this heading"></a></h2>
-<p>The original cleaner script is retained under <code class="docutils literal notranslate"><span class="pre">src/pipeline/clean.py</span></code> for
-normalizing scraped data before loading.</p>
+<section id="module-src.pipeline.clean">
+<span id="pipeline-clean-script"></span><h2>Pipeline Clean Script<a class="headerlink" href="#module-src.pipeline.clean" title="Link to this heading"></a></h2>
 </section>
 </section>
 

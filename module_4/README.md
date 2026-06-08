@@ -94,7 +94,7 @@ module_4/docs/_build/html/index.html
 
 ## CI
 
-The workflow at `module_4/.github/workflows/tests.yml` starts PostgreSQL, installs dependencies, and runs the full marked Pytest suite with coverage.
+The workflow at `.github/workflows/tests.yml` starts PostgreSQL, installs dependencies, and runs the full marked Pytest suite with coverage. A copy is also kept at `module_4/.github/workflows/tests.yml` for the assignment folder deliverable.
 
 After pushing to GitHub, capture a screenshot of a successful green run and save it as:
 

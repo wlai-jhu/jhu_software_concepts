@@ -91,10 +91,11 @@ touch the network.</p>
 </section>
 <section id="etl-and-database-layer">
 <h2>ETL and Database Layer<a class="headerlink" href="#etl-and-database-layer" title="Link to this heading"></a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">src.load_data</span></code> creates the required <code class="docutils literal notranslate"><span class="pre">applicants</span></code> table, normalizes raw
-Grad Cafe records, and inserts them into PostgreSQL. The uniqueness policy is
-based on the applicant entry URL. Duplicate pulls update existing rows instead
-of creating duplicate records.</p>
+<p><code class="docutils literal notranslate"><span class="pre">src.pipeline.scrape</span></code> and <code class="docutils literal notranslate"><span class="pre">src.pipeline.clean</span></code> retain the Module 3 scraping
+and cleaning workflow. <code class="docutils literal notranslate"><span class="pre">src.load_data</span></code> creates the required <code class="docutils literal notranslate"><span class="pre">applicants</span></code>
+table, normalizes raw Grad Cafe records, and inserts them into PostgreSQL. The
+uniqueness policy is based on the applicant entry URL. Duplicate pulls update
+existing rows instead of creating duplicate records.</p>
 </section>
 <section id="query-layer">
 <h2>Query Layer<a class="headerlink" href="#query-layer" title="Link to this heading"></a></h2>

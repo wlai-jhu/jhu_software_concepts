@@ -1,4 +1,6 @@
 [run]
 omit =
+    # The retained Module 3 scraper pipeline is documented and manually runnable,
+    # but excluded from unit coverage because it is a live-network collection tool.
     src/pipeline/*
     src/__init__.py

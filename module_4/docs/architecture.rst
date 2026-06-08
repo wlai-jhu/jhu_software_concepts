@@ -11,10 +11,11 @@ touch the network.
 ETL and Database Layer
 ----------------------
 
-``src.load_data`` creates the required ``applicants`` table, normalizes raw
-Grad Cafe records, and inserts them into PostgreSQL. The uniqueness policy is
-based on the applicant entry URL. Duplicate pulls update existing rows instead
-of creating duplicate records.
+``src.pipeline.scrape`` and ``src.pipeline.clean`` retain the Module 3 scraping
+and cleaning workflow. ``src.load_data`` creates the required ``applicants``
+table, normalizes raw Grad Cafe records, and inserts them into PostgreSQL. The
+uniqueness policy is based on the applicant entry URL. Duplicate pulls update
+existing rows instead of creating duplicate records.
 
 Query Layer
 -----------

@@ -28,11 +28,11 @@ Analysis Queries
 Pipeline Scrape Script
 ----------------------
 
-The original scraper script is retained under ``src/pipeline/scrape.py`` for
-the Grad Cafe data collection workflow.
+.. automodule:: src.pipeline.scrape
+   :members:
 
 Pipeline Clean Script
 ---------------------
 
-The original cleaner script is retained under ``src/pipeline/clean.py`` for
-normalizing scraped data before loading.
+.. automodule:: src.pipeline.clean
+   :members:

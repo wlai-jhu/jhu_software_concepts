@@ -1,5 +1,6 @@
 import pytest
 
+from src.app import create_app
 from src.load_data import load_applicants
 from src.query_data import expected_result_keys, run_query
 from tests.conftest import SAMPLE_RECORDS, count_applicants
@@ -30,6 +31,24 @@ def test_insert_on_pull_writes_required_non_null_fields(reset_db, sample_json_fi
     assert len(rows) == len(SAMPLE_RECORDS)
     for row in rows:
         assert all(row[field] is not None for field in row)
+
+
+@pytest.mark.db
+def test_post_pull_data_writes_rows_to_database(reset_db, tmp_path):
+    import json
+
+    def loader(records):
+        path = tmp_path / "posted-records.json"
+        path.write_text(json.dumps(list(records)), encoding="utf-8")
+        return load_applicants(path, reset=False)
+
+    app = create_app(scraper=lambda: SAMPLE_RECORDS, loader=loader, testing=True)
+
+    response = app.test_client().post("/pull-data")
+
+    assert response.status_code == 200
+    assert response.get_json() == {"ok": True, "rows": len(SAMPLE_RECORDS)}
+    assert count_applicants(reset_db) == len(SAMPLE_RECORDS)
 
 
 @pytest.mark.db
