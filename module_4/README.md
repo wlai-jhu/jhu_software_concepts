@@ -48,7 +48,23 @@ The GitHub Actions workflow uses:
 postgresql://postgres:postgres@localhost:5432/gradcafe_test
 ```
 
+Tests truncate and reload their database. Keep them pointed at a separate test
+database:
+
+```bash
+createdb gradcafe_test
+export TEST_DATABASE_URL="postgresql://wmacbookpro@localhost:5432/gradcafe_test"
+```
+
 ## Run the App
+
+If the app is showing only the two test fixture rows, reload the application
+database from the full Module 2 dataset:
+
+```bash
+export DATABASE_URL="postgresql://wmacbookpro@localhost:5432/gradcafe"
+python -m src.load_data --reset
+```
 
 From the repository root:
 
@@ -83,6 +99,10 @@ From `module_4`:
 ```bash
 pytest -m "web or buttons or analysis or db or integration"
 ```
+
+The tests use `TEST_DATABASE_URL` when it is set. If it is not set, they will
+fall back to a database named `gradcafe_test` and refuse to run against a
+database whose name does not contain `test`.
 
 The coverage gate is configured in `pytest.ini`:
 

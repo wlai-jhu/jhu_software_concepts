@@ -91,7 +91,20 @@
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">DATABASE_URL</span><span class="o">=</span><span class="s2">&quot;postgresql://postgres:postgres@localhost:5432/gradcafe&quot;</span>
 </pre></div>
 </div>
+<p>Tests truncate and reload their database. Keep them pointed at a separate test
+database:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>createdb<span class="w"> </span>gradcafe_test
+<span class="nb">export</span><span class="w"> </span><span class="nv">TEST_DATABASE_URL</span><span class="o">=</span><span class="s2">&quot;postgresql://wmacbookpro@localhost:5432/gradcafe_test&quot;</span>
+</pre></div>
+</div>
 <p>Run the Flask application:</p>
+<p>If the app is showing only the two test fixture rows, reload the application
+database from the full Module 2 dataset:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">DATABASE_URL</span><span class="o">=</span><span class="s2">&quot;postgresql://wmacbookpro@localhost:5432/gradcafe&quot;</span>
+python<span class="w"> </span>-m<span class="w"> </span>src.load_data<span class="w"> </span>--reset
+</pre></div>
+</div>
+<p>From the repository root:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>flask<span class="w"> </span>--app<span class="w"> </span>module_4.src.app<span class="w"> </span>run
 </pre></div>
 </div>
@@ -100,6 +113,9 @@
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pytest<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;web or buttons or analysis or db or integration&quot;</span>
 </pre></div>
 </div>
+<p>The tests use <code class="docutils literal notranslate"><span class="pre">TEST_DATABASE_URL</span></code> when it is set. If it is not set, they fall
+back to a database named <code class="docutils literal notranslate"><span class="pre">gradcafe_test</span></code> and refuse to run against a database
+whose name does not contain <code class="docutils literal notranslate"><span class="pre">test</span></code>.</p>
 <p>Build this documentation:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>module_4
 sphinx-build<span class="w"> </span>-b<span class="w"> </span>html<span class="w"> </span>docs<span class="w"> </span>docs/_build/html

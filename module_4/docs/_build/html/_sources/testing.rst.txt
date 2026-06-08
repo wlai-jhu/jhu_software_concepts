@@ -4,6 +4,20 @@ Testing Guide
 The test suite lives under ``module_4/tests`` and uses Flask's test client.
 There are no live scrapes, browser clicks, or sleeps in the tests.
 
+Database Safety
+---------------
+
+Database tests truncate and reload the ``applicants`` table, so they must use a
+separate test database. Set ``TEST_DATABASE_URL`` before running tests locally:
+
+.. code-block:: bash
+
+   createdb gradcafe_test
+   export TEST_DATABASE_URL="postgresql://wmacbookpro@localhost:5432/gradcafe_test"
+
+The fixture refuses to run destructive tests against a database whose name does
+not contain ``test``.
+
 Markers
 -------
 

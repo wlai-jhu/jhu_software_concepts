@@ -8,7 +8,7 @@ from typing import Any, Dict, Iterable, Optional
 from .db import connect
 
 
-DEFAULT_INPUT_PATH = Path(__file__).resolve().parents[1] / "module_2" / "llm_extend_applicant_data.json"
+DEFAULT_INPUT_PATH = Path(__file__).resolve().parents[2] / "module_2" / "llm_extend_applicant_data.json"
 
 # PostgreSQL table shape mirrors the assignment questions and keeps both downloaded
 # fields and LLM-standardized fields available for comparison.

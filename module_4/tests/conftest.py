@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from urllib.parse import urlparse
 
 import pytest
 
@@ -42,8 +43,22 @@ SAMPLE_RECORDS = [
 
 @pytest.fixture(scope="session", autouse=True)
 def database_url():
-    os.environ.setdefault("DATABASE_URL", "postgresql://wmacbookpro@localhost:5432/gradcafe")
-    return os.environ["DATABASE_URL"]
+    url = os.environ.get("TEST_DATABASE_URL")
+    if not url:
+        configured_url = os.environ.get("DATABASE_URL", "")
+        url = (
+            configured_url
+            if "test" in Path(urlparse(configured_url).path).name
+            else "postgresql://wmacbookpro@localhost:5432/gradcafe_test"
+        )
+    dbname = Path(urlparse(url).path).name
+    if "test" not in dbname:
+        raise RuntimeError(
+            f"Refusing to run destructive tests against non-test database {dbname!r}. "
+            "Set TEST_DATABASE_URL to a database name containing 'test'."
+        )
+    os.environ["DATABASE_URL"] = url
+    return url
 
 
 @pytest.fixture()

@@ -47,6 +47,7 @@
 <li class="toctree-l1"><a class="reference internal" href="setup.html">Overview and Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Testing Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#database-safety">Database Safety</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#markers">Markers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#selectors">Selectors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#fixtures-and-test-doubles">Fixtures and Test Doubles</a></li>
@@ -84,6 +85,17 @@
 <h1>Testing Guide<a class="headerlink" href="#testing-guide" title="Link to this heading"></a></h1>
 <p>The test suite lives under <code class="docutils literal notranslate"><span class="pre">module_4/tests</span></code> and uses Flask’s test client.
 There are no live scrapes, browser clicks, or sleeps in the tests.</p>
+<section id="database-safety">
+<h2>Database Safety<a class="headerlink" href="#database-safety" title="Link to this heading"></a></h2>
+<p>Database tests truncate and reload the <code class="docutils literal notranslate"><span class="pre">applicants</span></code> table, so they must use a
+separate test database. Set <code class="docutils literal notranslate"><span class="pre">TEST_DATABASE_URL</span></code> before running tests locally:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>createdb<span class="w"> </span>gradcafe_test
+<span class="nb">export</span><span class="w"> </span><span class="nv">TEST_DATABASE_URL</span><span class="o">=</span><span class="s2">&quot;postgresql://wmacbookpro@localhost:5432/gradcafe_test&quot;</span>
+</pre></div>
+</div>
+<p>The fixture refuses to run destructive tests against a database whose name does
+not contain <code class="docutils literal notranslate"><span class="pre">test</span></code>.</p>
+</section>
 <section id="markers">
 <h2>Markers<a class="headerlink" href="#markers" title="Link to this heading"></a></h2>
 <p>Every test is marked with at least one assignment marker:</p>

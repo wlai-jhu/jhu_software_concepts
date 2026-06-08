@@ -22,7 +22,25 @@ For a password-based local ``postgres`` user, use:
 
    export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/gradcafe"
 
+Tests truncate and reload their database. Keep them pointed at a separate test
+database:
+
+.. code-block:: bash
+
+   createdb gradcafe_test
+   export TEST_DATABASE_URL="postgresql://wmacbookpro@localhost:5432/gradcafe_test"
+
 Run the Flask application:
+
+If the app is showing only the two test fixture rows, reload the application
+database from the full Module 2 dataset:
+
+.. code-block:: bash
+
+   export DATABASE_URL="postgresql://wmacbookpro@localhost:5432/gradcafe"
+   python -m src.load_data --reset
+
+From the repository root:
 
 .. code-block:: bash
 
@@ -35,6 +53,10 @@ Run tests from ``module_4``:
 .. code-block:: bash
 
    pytest -m "web or buttons or analysis or db or integration"
+
+The tests use ``TEST_DATABASE_URL`` when it is set. If it is not set, they fall
+back to a database named ``gradcafe_test`` and refuse to run against a database
+whose name does not contain ``test``.
 
 Build this documentation:
 
