@@ -158,7 +158,7 @@ Read the Docs is configured by the repository-level `.readthedocs.yaml` file.
 
 The workflow at `.github/workflows/tests.yml` starts PostgreSQL, installs dependencies, and runs the full marked Pytest suite with coverage. A copy is also kept at `module_4/.github/workflows/tests.yml` for the assignment folder deliverable.
 
-After pushing to GitHub, capture a screenshot of a successful green run and save it as:
+The committed proof screenshot for a successful green GitHub Actions run is:
 
 ```text
 module_4/actions_success.png

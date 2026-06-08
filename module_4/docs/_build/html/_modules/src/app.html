@@ -210,6 +210,8 @@
 
     <span class="n">scrape_output</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">scrape_output</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="c1"># Start live scraping from the submitted dataset so Pull Data preserves</span>
+        <span class="c1"># the records already used by the assignment analysis.</span>
         <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="n">DEFAULT_DATA_PATH</span><span class="p">,</span> <span class="n">scrape_output</span><span class="p">)</span>
         <span class="k">return</span>
 
@@ -254,6 +256,7 @@
             <span class="nb">str</span><span class="p">(</span><span class="n">scrape_output</span><span class="p">),</span>
         <span class="p">]</span>
         <span class="k">if</span> <span class="n">last_entry_date</span><span class="p">:</span>
+            <span class="c1"># Avoid re-scraping pages older than the newest row already loaded.</span>
             <span class="n">scrape_command</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--stop-before-date&quot;</span><span class="p">,</span> <span class="n">last_entry_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()])</span>
 
         <span class="n">commands</span> <span class="o">=</span> <span class="p">[</span>
@@ -271,6 +274,8 @@
         <span class="k">for</span> <span class="n">command</span> <span class="ow">in</span> <span class="n">commands</span><span class="p">:</span>
             <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">PIPELINE_DIR</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
+        <span class="c1"># Comment enrichment is separated from the first scrape/clean pass because</span>
+        <span class="c1"># it can resume independently and is the slowest network-heavy step.</span>
         <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
             <span class="p">[</span>
                 <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span>
@@ -305,6 +310,8 @@
                 <span class="nb">str</span><span class="p">(</span><span class="n">llm_output</span><span class="p">),</span>
             <span class="p">]</span>
             <span class="k">if</span> <span class="n">llm_dependencies_available</span><span class="p">():</span>
+                <span class="c1"># Use the local LLM only when its optional packages are installed;</span>
+                <span class="c1"># otherwise llm_clean.py writes deterministic fallback fields.</span>
                 <span class="n">llm_command</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--resume-llm&quot;</span><span class="p">,</span> <span class="s2">&quot;--llm-batch-size&quot;</span><span class="p">,</span> <span class="s2">&quot;1000&quot;</span><span class="p">])</span>
                 <span class="n">llm_message</span> <span class="o">=</span> <span class="s2">&quot;Downloaded, comment, and LLM-generated fields were refreshed.&quot;</span>
             <span class="k">else</span><span class="p">:</span>
@@ -353,6 +360,8 @@
         <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;busy&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;ok&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
 
     <span class="n">result_queue</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+    <span class="c1"># Run the live scraper outside the Flask request so the browser gets a quick</span>
+    <span class="c1"># response while the long pipeline continues in the background.</span>
     <span class="n">process</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span>
         <span class="n">target</span><span class="o">=</span><span class="n">run_live_data_pull_process</span><span class="p">,</span>
         <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">result_queue</span><span class="p">,</span> <span class="n">last_entry_date</span><span class="p">),</span>
@@ -393,6 +402,7 @@
     <span class="n">load</span> <span class="o">=</span> <span class="n">loader</span> <span class="ow">or</span> <span class="n">default_loader</span>
     <span class="n">queries</span> <span class="o">=</span> <span class="n">query_runner</span> <span class="ow">or</span> <span class="n">run_all_queries</span>
     <span class="n">live_starter</span> <span class="o">=</span> <span class="n">live_pull_starter</span> <span class="ow">or</span> <span class="n">start_live_data_pull</span>
+    <span class="c1"># Tests inject scraper/loader callables so they never run the live network pipeline.</span>
     <span class="n">use_live_pull</span> <span class="o">=</span> <span class="n">scraper</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">loader</span> <span class="ow">is</span> <span class="kc">None</span>
     <span class="n">app</span><span class="o">.</span><span class="n">extensions</span><span class="p">[</span><span class="s2">&quot;busy_state&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span>
 

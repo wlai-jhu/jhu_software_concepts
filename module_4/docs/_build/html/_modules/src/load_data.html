@@ -118,6 +118,8 @@
 <span class="s2">    </span><span class="si">%(degree)s</span><span class="s2">, </span><span class="si">%(llm_generated_program)s</span><span class="s2">, </span><span class="si">%(llm_generated_university)s</span>
 <span class="s2">)</span>
 <span class="s2">ON CONFLICT (url) DO UPDATE SET</span>
+<span class="s2">    -- Treat Grad Cafe entry URLs as stable identities so repeated pulls refresh</span>
+<span class="s2">    -- changed fields without duplicating applicant rows.</span>
 <span class="s2">    program = EXCLUDED.program,</span>
 <span class="s2">    comments = EXCLUDED.comments,</span>
 <span class="s2">    date_added = EXCLUDED.date_added,</span>
@@ -185,6 +187,8 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert one JSON applicant record into the columns expected by PostgreSQL.&quot;&quot;&quot;</span>
     <span class="n">program</span> <span class="o">=</span> <span class="n">first_present</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="s2">&quot;program_name_cleaned&quot;</span><span class="p">,</span> <span class="s2">&quot;program_name&quot;</span><span class="p">)</span>
     <span class="n">university</span> <span class="o">=</span> <span class="n">first_present</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="s2">&quot;university_cleaned&quot;</span><span class="p">,</span> <span class="s2">&quot;university&quot;</span><span class="p">)</span>
+    <span class="c1"># Keep the downloaded school and program together because several assignment</span>
+    <span class="c1"># questions search the original combined text directly.</span>
     <span class="n">combined_program</span> <span class="o">=</span> <span class="s2">&quot; - &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">part</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="p">(</span><span class="n">university</span><span class="p">,</span> <span class="n">program</span><span class="p">)</span> <span class="k">if</span> <span class="n">part</span><span class="p">)</span>
 
     <span class="n">llm_program</span> <span class="o">=</span> <span class="n">first_present</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="s2">&quot;llm_generated_program&quot;</span><span class="p">,</span> <span class="s2">&quot;program_name_cleaned&quot;</span><span class="p">,</span> <span class="s2">&quot;program_name&quot;</span><span class="p">)</span>
@@ -230,6 +234,8 @@
                 <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;TRUNCATE applicants;&quot;</span><span class="p">)</span>
                 <span class="n">first_p_id</span> <span class="o">=</span> <span class="mi">1</span>
             <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Continue p_id values across incremental loads while URL upserts</span>
+                <span class="c1"># prevent duplicate records from repeated Pull Data clicks.</span>
                 <span class="n">first_p_id</span> <span class="o">=</span> <span class="n">next_available_p_id</span><span class="p">(</span><span class="n">cur</span><span class="p">)</span>
 
             <span class="n">normalized_records</span> <span class="o">=</span> <span class="p">[</span>

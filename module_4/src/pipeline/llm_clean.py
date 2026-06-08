@@ -6,7 +6,10 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Set
 
-from clean import clean_data, load_data, save_data
+try:
+    from .clean import clean_data, load_data, save_data
+except ImportError:  # pragma: no cover - supports running this file as a script.
+    from clean import clean_data, load_data, save_data
 
 
 DEFAULT_INPUT_PATH = "data/raw_applicant_data.json"

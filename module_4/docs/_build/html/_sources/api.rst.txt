@@ -36,3 +36,15 @@ Pipeline Clean Script
 
 .. automodule:: src.pipeline.clean
    :members:
+
+Comment Enrichment Script
+-------------------------
+
+.. automodule:: src.pipeline.enrich_comments
+   :members:
+
+LLM Cleanup Script
+------------------
+
+.. automodule:: src.pipeline.llm_clean
+   :members:
