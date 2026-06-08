@@ -16,7 +16,7 @@ git@github.com:wlai-jhu/jhu_software_concepts.git
 Read the Docs URL:
 
 ```text
-Add the published Read the Docs link here after connecting the GitHub repository.
+https://wlai-jhu-sphinx-rtd-demo.readthedocs.io/en/latest/operational-notes.html
 ```
 
 ## Setup

@@ -43,6 +43,8 @@ INSERT INTO applicants (
     %(degree)s, %(llm_generated_program)s, %(llm_generated_university)s
 )
 ON CONFLICT (url) DO UPDATE SET
+    -- Treat Grad Cafe entry URLs as stable identities so repeated pulls refresh
+    -- changed fields without duplicating applicant rows.
     program = EXCLUDED.program,
     comments = EXCLUDED.comments,
     date_added = EXCLUDED.date_added,
@@ -99,6 +101,8 @@ def normalize_record(record: Dict[str, Any], p_id: int) -> Dict[str, Any]:
     """Convert one JSON applicant record into the columns expected by PostgreSQL."""
     program = first_present(record, "program_name_cleaned", "program_name")
     university = first_present(record, "university_cleaned", "university")
+    # Keep the downloaded school and program together because several assignment
+    # questions search the original combined text directly.
     combined_program = " - ".join(part for part in (university, program) if part)
 
     llm_program = first_present(record, "llm_generated_program", "program_name_cleaned", "program_name")
@@ -143,6 +147,8 @@ def load_applicants(input_path: Path, reset: bool = False) -> int:
                 cur.execute("TRUNCATE applicants;")
                 first_p_id = 1
             else:
+                # Continue p_id values across incremental loads while URL upserts
+                # prevent duplicate records from repeated Pull Data clicks.
                 first_p_id = next_available_p_id(cur)
 
             normalized_records = [

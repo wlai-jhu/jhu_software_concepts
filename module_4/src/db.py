@@ -9,6 +9,7 @@ DEFAULT_DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/gradcafe"
 def database_url() -> str:
     url = os.environ.get("DATABASE_URL", DEFAULT_DATABASE_URL)
     parsed = urlparse(url)
+    # Fail fast when setup instructions were copied without replacing placeholders.
     if parsed.username in {"USER", "USERNAME"} or parsed.password == "PASSWORD":
         raise RuntimeError(
             "DATABASE_URL still contains placeholder credentials. Use a real PostgreSQL "
@@ -34,6 +35,7 @@ def connect(row_factory=None):
     psycopg = require_psycopg()
     kwargs = {}
     if row_factory is not None:
+        # Query code asks for dict rows so templates can read values by column name.
         kwargs["row_factory"] = row_factory
     with psycopg.connect(database_url(), **kwargs) as conn:
         yield conn

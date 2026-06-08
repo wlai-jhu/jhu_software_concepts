@@ -126,6 +126,8 @@ def seed_scrape_output(scrape_output: Path) -> None:  # pragma: no cover - live 
 
     scrape_output.parent.mkdir(parents=True, exist_ok=True)
     if not scrape_output.exists():
+        # Start live scraping from the submitted dataset so Pull Data preserves
+        # the records already used by the assignment analysis.
         shutil.copyfile(DEFAULT_DATA_PATH, scrape_output)
         return
 
@@ -170,6 +172,7 @@ def perform_live_data_pull(last_entry_date=None) -> tuple[str, str]:  # pragma: 
             str(scrape_output),
         ]
         if last_entry_date:
+            # Avoid re-scraping pages older than the newest row already loaded.
             scrape_command.extend(["--stop-before-date", last_entry_date.isoformat()])
 
         commands = [
@@ -187,6 +190,8 @@ def perform_live_data_pull(last_entry_date=None) -> tuple[str, str]:  # pragma: 
         for command in commands:
             subprocess.run(command, cwd=PIPELINE_DIR, check=True)
 
+        # Comment enrichment is separated from the first scrape/clean pass because
+        # it can resume independently and is the slowest network-heavy step.
         subprocess.run(
             [
                 sys.executable,
@@ -221,6 +226,8 @@ def perform_live_data_pull(last_entry_date=None) -> tuple[str, str]:  # pragma: 
                 str(llm_output),
             ]
             if llm_dependencies_available():
+                # Use the local LLM only when its optional packages are installed;
+                # otherwise llm_clean.py writes deterministic fallback fields.
                 llm_command.extend(["--resume-llm", "--llm-batch-size", "1000"])
                 llm_message = "Downloaded, comment, and LLM-generated fields were refreshed."
             else:
@@ -269,6 +276,8 @@ def start_live_data_pull(state: BusyState) -> Dict[str, Any]:  # pragma: no cove
         return {"busy": True, "ok": False}
 
     result_queue = multiprocessing.Queue()
+    # Run the live scraper outside the Flask request so the browser gets a quick
+    # response while the long pipeline continues in the background.
     process = multiprocessing.Process(
         target=run_live_data_pull_process,
         args=(result_queue, last_entry_date),
@@ -307,6 +316,7 @@ def create_app(
     load = loader or default_loader
     queries = query_runner or run_all_queries
     live_starter = live_pull_starter or start_live_data_pull
+    # Tests inject scraper/loader callables so they never run the live network pipeline.
     use_live_pull = scraper is None and loader is None
     app.extensions["busy_state"] = state
 
