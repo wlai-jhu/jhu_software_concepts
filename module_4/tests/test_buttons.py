@@ -34,6 +34,33 @@ def test_pull_data_browser_form_redirects_to_analysis_page():
 
 
 @pytest.mark.buttons
+def test_default_pull_data_starts_live_runner_for_browser_form():
+    calls = {}
+
+    def live_starter(state):
+        calls["running_before"] = state.snapshot()["running"]
+        return {"ok": True, "running": True}
+
+    app = create_app(live_pull_starter=live_starter)
+
+    response = app.test_client().post("/pull-data", headers={"Accept": "text/html"})
+
+    assert response.status_code == 302
+    assert response.headers["Location"] == "/analysis"
+    assert calls == {"running_before": False}
+
+
+@pytest.mark.buttons
+def test_default_pull_data_returns_409_when_live_runner_is_busy():
+    app = create_app(live_pull_starter=lambda state: {"busy": True, "ok": False})
+
+    response = app.test_client().post("/pull-data", headers={"Accept": "application/json"})
+
+    assert response.status_code == 409
+    assert response.get_json() == {"busy": True, "ok": False}
+
+
+@pytest.mark.buttons
 def test_update_analysis_returns_ok_when_not_busy():
     app = create_app(testing=True)
 

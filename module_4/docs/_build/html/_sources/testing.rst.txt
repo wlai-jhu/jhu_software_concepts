@@ -13,10 +13,19 @@ separate test database. Set ``TEST_DATABASE_URL`` before running tests locally:
 .. code-block:: bash
 
    createdb gradcafe_test
-   export TEST_DATABASE_URL="postgresql://wmacbookpro@localhost:5432/gradcafe_test"
+   export TEST_DATABASE_URL="postgresql://$(whoami)@localhost:5432/gradcafe_test"
 
 The fixture refuses to run destructive tests against a database whose name does
 not contain ``test``.
+
+Coverage Scope
+--------------
+
+The retained live scraper pipeline under ``src/pipeline/`` is documented with
+Sphinx but excluded from unit coverage because it performs live network
+collection. Flask route tests use dependency injection with fake scraper and
+loader functions, which keeps the suite deterministic and avoids long-running
+scrapes.
 
 Markers
 -------

@@ -4,6 +4,8 @@ __pycache__/
 .pytest_cache/
 .venv/
 **/.venv/
+py3-sphinx/
+**/py3-sphinx/
 .DS_Store
 module_2/models/
 module_2/data/

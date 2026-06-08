@@ -87,7 +87,9 @@
 <h2>Web Layer<a class="headerlink" href="#web-layer" title="Link to this heading"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">src.app</span></code> exposes <code class="docutils literal notranslate"><span class="pre">create_app(...)</span></code>. Tests can inject fake scraper, loader,
 query, and busy-state objects so the Flask routes are deterministic and do not
-touch the network.</p>
+touch the network. In normal browser use, <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/pull-data</span></code> starts a
+background Module 3-style live pipeline process and <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/pull-status</span></code> reports
+progress back to the page.</p>
 </section>
 <section id="etl-and-database-layer">
 <h2>ETL and Database Layer<a class="headerlink" href="#etl-and-database-layer" title="Link to this heading"></a></h2>

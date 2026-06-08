@@ -8,6 +8,11 @@ The app uses a small observable ``BusyState`` object. If a pull is running,
 ``POST /pull-data`` and ``POST /update-analysis`` return HTTP 409 with
 ``{"busy": true, "ok": false}``.
 
+In normal browser use, ``Pull Data`` starts the live scraper/clean/enrich/load
+pipeline in a background process, then redirects back to the analysis page.
+The status endpoint reports when the process finishes. In tests, the same route
+uses injected fakes so the suite never depends on a live network scrape.
+
 Idempotency Strategy
 --------------------
 

@@ -81,10 +81,20 @@
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>module_4/requirements.txt
 </pre></div>
 </div>
+<p>Optional isolated Sphinx environment:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>py3-sphinx
+<span class="nb">source</span><span class="w"> </span>py3-sphinx/bin/activate
+python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>module_4/requirements.txt
+</pre></div>
+</div>
+<p>Confirm Sphinx is available:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sphinx-build<span class="w"> </span>--help
+</pre></div>
+</div>
 <p>Configure PostgreSQL with <code class="docutils literal notranslate"><span class="pre">DATABASE_URL</span></code>. Do not copy placeholder values like
 <code class="docutils literal notranslate"><span class="pre">USER</span></code> or <code class="docutils literal notranslate"><span class="pre">PASSWORD</span></code> literally.</p>
-<p>For this Mac’s local Postgres.app-style setup, use:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">DATABASE_URL</span><span class="o">=</span><span class="s2">&quot;postgresql://wmacbookpro@localhost:5432/gradcafe&quot;</span>
+<p>For a local Postgres.app-style setup, use your macOS username:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">DATABASE_URL</span><span class="o">=</span><span class="s2">&quot;postgresql://</span><span class="k">$(</span>whoami<span class="k">)</span><span class="s2">@localhost:5432/gradcafe&quot;</span>
 </pre></div>
 </div>
 <p>For a password-based local <code class="docutils literal notranslate"><span class="pre">postgres</span></code> user, use:</p>
@@ -94,13 +104,13 @@
 <p>Tests truncate and reload their database. Keep them pointed at a separate test
 database:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>createdb<span class="w"> </span>gradcafe_test
-<span class="nb">export</span><span class="w"> </span><span class="nv">TEST_DATABASE_URL</span><span class="o">=</span><span class="s2">&quot;postgresql://wmacbookpro@localhost:5432/gradcafe_test&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">TEST_DATABASE_URL</span><span class="o">=</span><span class="s2">&quot;postgresql://</span><span class="k">$(</span>whoami<span class="k">)</span><span class="s2">@localhost:5432/gradcafe_test&quot;</span>
 </pre></div>
 </div>
 <p>Run the Flask application:</p>
 <p>If the app is showing only the two test fixture rows, reload the application
 database from the full Module 2 dataset:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">DATABASE_URL</span><span class="o">=</span><span class="s2">&quot;postgresql://wmacbookpro@localhost:5432/gradcafe&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">DATABASE_URL</span><span class="o">=</span><span class="s2">&quot;postgresql://</span><span class="k">$(</span>whoami<span class="k">)</span><span class="s2">@localhost:5432/gradcafe&quot;</span>
 python<span class="w"> </span>-m<span class="w"> </span>src.load_data<span class="w"> </span>--reset
 </pre></div>
 </div>
@@ -121,6 +131,20 @@ whose name does not contain <code class="docutils literal notranslate"><span cla
 sphinx-build<span class="w"> </span>-b<span class="w"> </span>html<span class="w"> </span>docs<span class="w"> </span>docs/_build/html
 </pre></div>
 </div>
+<p>You can also use the generated Sphinx Makefile:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>module_4/docs
+make<span class="w"> </span>html
+</pre></div>
+</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">sphinx-build</span></code> is not on your <code class="docutils literal notranslate"><span class="pre">PATH</span></code>, activate the virtual environment
+first or call Sphinx through Python:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span><span class="w"> </span>../../py3-sphinx/bin/activate
+make<span class="w"> </span>html
+</pre></div>
+</div>
+<p>The local HTML entry point is <code class="docutils literal notranslate"><span class="pre">module_4/docs/_build/html/index.html</span></code>.</p>
+<p>Read the Docs uses the repository-level <code class="docutils literal notranslate"><span class="pre">.readthedocs.yaml</span></code> file and the
+Sphinx configuration at <code class="docutils literal notranslate"><span class="pre">module_4/docs/conf.py</span></code>.</p>
 </section>
 
 

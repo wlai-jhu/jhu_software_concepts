@@ -12,7 +12,7 @@ def database_url() -> str:
     if parsed.username in {"USER", "USERNAME"} or parsed.password == "PASSWORD":
         raise RuntimeError(
             "DATABASE_URL still contains placeholder credentials. Use a real PostgreSQL "
-            "connection string, such as postgresql://wmacbookpro@localhost:5432/gradcafe "
+            "connection string, such as postgresql://$(whoami)@localhost:5432/gradcafe "
             "for local Postgres.app or postgresql://postgres:postgres@localhost:5432/gradcafe "
             "for a password-based postgres user."
         )

@@ -77,25 +77,32 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">importlib.util</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">multiprocessing</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">timezone</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">flask</span><span class="w"> </span><span class="kn">import</span> <span class="n">Flask</span><span class="p">,</span> <span class="n">jsonify</span><span class="p">,</span> <span class="n">render_template</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flask</span><span class="w"> </span><span class="kn">import</span> <span class="n">Flask</span><span class="p">,</span> <span class="n">jsonify</span><span class="p">,</span> <span class="n">redirect</span><span class="p">,</span> <span class="n">render_template</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">url_for</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.load_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_applicants</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.query_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">empty_analysis_results</span><span class="p">,</span> <span class="n">run_all_queries</span>
 
 
 <span class="n">BASE_DIR</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
+<span class="n">PIPELINE_DIR</span> <span class="o">=</span> <span class="n">BASE_DIR</span> <span class="o">/</span> <span class="s2">&quot;pipeline&quot;</span>
 <span class="n">DEFAULT_DATA_PATH</span> <span class="o">=</span> <span class="n">BASE_DIR</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;module_2&quot;</span> <span class="o">/</span> <span class="s2">&quot;llm_extend_applicant_data.json&quot;</span>
 
 <span class="n">Scraper</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span>
 <span class="n">Loader</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]],</span> <span class="nb">int</span><span class="p">]</span>
 <span class="n">QueryRunner</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span>
+<span class="n">LivePullStarter</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="s2">&quot;BusyState&quot;</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
 
 
 <div class="viewcode-block" id="BusyState">
@@ -161,6 +168,211 @@
 
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">recommended_worker_count</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>  <span class="c1"># pragma: no cover - live scraper tuning.</span>
+    <span class="n">cpu_count</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
+    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="n">cpu_count</span> <span class="o">*</span> <span class="mi">2</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">llm_dependencies_available</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>  <span class="c1"># pragma: no cover - depends on optional local packages.</span>
+    <span class="k">return</span> <span class="nb">all</span><span class="p">(</span>
+        <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="n">package_name</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">package_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;huggingface_hub&quot;</span><span class="p">,</span> <span class="s2">&quot;llama_cpp&quot;</span><span class="p">)</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">display_date</span><span class="p">(</span><span class="n">entry_date</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>  <span class="c1"># pragma: no cover - live status formatting.</span>
+    <span class="k">if</span> <span class="n">entry_date</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;unknown&quot;</span>
+    <span class="k">return</span> <span class="n">entry_date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%b </span><span class="si">%d</span><span class="s2">, %Y&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">latest_database_entry_date</span><span class="p">():</span>  <span class="c1"># pragma: no cover - live PostgreSQL status query.</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.db</span><span class="w"> </span><span class="kn">import</span> <span class="n">connect</span>
+
+        <span class="k">with</span> <span class="n">connect</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+                <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;SELECT MAX(date_added) FROM applicants;&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">cur</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">timestamp_for_entry_date</span><span class="p">(</span><span class="n">entry_date</span><span class="p">):</span>  <span class="c1"># pragma: no cover - live status formatting.</span>
+    <span class="k">if</span> <span class="n">entry_date</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span><span class="n">entry_date</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">min</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">seed_scrape_output</span><span class="p">(</span><span class="n">scrape_output</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pragma: no cover - live pipeline setup.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">DEFAULT_DATA_PATH</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">return</span>
+
+    <span class="n">scrape_output</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">scrape_output</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="n">DEFAULT_DATA_PATH</span><span class="p">,</span> <span class="n">scrape_output</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="n">submitted_records</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">DEFAULT_DATA_PATH</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+    <span class="n">existing_records</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">scrape_output</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+    <span class="n">merged_records</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">submitted_records</span><span class="p">)</span>
+    <span class="n">seen_urls</span> <span class="o">=</span> <span class="p">{</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;entry_url&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">submitted_records</span> <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;entry_url&quot;</span><span class="p">)}</span>
+    <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">existing_records</span><span class="p">:</span>
+        <span class="n">entry_url</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;entry_url&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">entry_url</span> <span class="ow">and</span> <span class="n">entry_url</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen_urls</span><span class="p">:</span>
+            <span class="n">merged_records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+            <span class="n">seen_urls</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">entry_url</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">merged_records</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">existing_records</span><span class="p">):</span>
+        <span class="n">scrape_output</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">merged_records</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">perform_live_data_pull</span><span class="p">(</span><span class="n">last_entry_date</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>  <span class="c1"># pragma: no cover - live network workflow.</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">scrape_output</span> <span class="o">=</span> <span class="n">PIPELINE_DIR</span> <span class="o">/</span> <span class="s2">&quot;data&quot;</span> <span class="o">/</span> <span class="s2">&quot;raw_applicant_data.json&quot;</span>
+        <span class="n">cleaned_output</span> <span class="o">=</span> <span class="n">PIPELINE_DIR</span> <span class="o">/</span> <span class="s2">&quot;applicant_data.json&quot;</span>
+        <span class="n">llm_output</span> <span class="o">=</span> <span class="n">PIPELINE_DIR</span> <span class="o">/</span> <span class="s2">&quot;llm_extend_applicant_data.json&quot;</span>
+        <span class="n">seed_scrape_output</span><span class="p">(</span><span class="n">scrape_output</span><span class="p">)</span>
+
+        <span class="n">existing_records</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">scrape_output</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">existing_records</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">scrape_output</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)))</span>
+        <span class="n">target_records</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">existing_records</span> <span class="o">+</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+        <span class="n">parallel_pages</span> <span class="o">=</span> <span class="n">recommended_worker_count</span><span class="p">()</span>
+
+        <span class="n">scrape_command</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">PIPELINE_DIR</span> <span class="o">/</span> <span class="s2">&quot;scrape.py&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;--target&quot;</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">target_records</span><span class="p">),</span>
+            <span class="s2">&quot;--delay&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;3&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;--stop-on-existing&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;--parallel-pages&quot;</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">parallel_pages</span><span class="p">),</span>
+            <span class="s2">&quot;--output&quot;</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">scrape_output</span><span class="p">),</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="n">last_entry_date</span><span class="p">:</span>
+            <span class="n">scrape_command</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--stop-before-date&quot;</span><span class="p">,</span> <span class="n">last_entry_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()])</span>
+
+        <span class="n">commands</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">scrape_command</span><span class="p">,</span>
+            <span class="p">[</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">PIPELINE_DIR</span> <span class="o">/</span> <span class="s2">&quot;clean.py&quot;</span><span class="p">),</span>
+                <span class="s2">&quot;--input&quot;</span><span class="p">,</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">scrape_output</span><span class="p">),</span>
+                <span class="s2">&quot;--output&quot;</span><span class="p">,</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">cleaned_output</span><span class="p">),</span>
+            <span class="p">],</span>
+        <span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">command</span> <span class="ow">in</span> <span class="n">commands</span><span class="p">:</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">PIPELINE_DIR</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">PIPELINE_DIR</span> <span class="o">/</span> <span class="s2">&quot;enrich_comments.py&quot;</span><span class="p">),</span>
+                <span class="s2">&quot;--input&quot;</span><span class="p">,</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">cleaned_output</span><span class="p">),</span>
+                <span class="s2">&quot;--output&quot;</span><span class="p">,</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">cleaned_output</span><span class="p">),</span>
+                <span class="s2">&quot;--start-index&quot;</span><span class="p">,</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">existing_records</span><span class="p">),</span>
+                <span class="s2">&quot;--all-records&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;--parallel-pages&quot;</span><span class="p">,</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">parallel_pages</span><span class="p">),</span>
+                <span class="s2">&quot;--delay&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;1&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;--progress&quot;</span><span class="p">,</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">PIPELINE_DIR</span> <span class="o">/</span> <span class="s2">&quot;data&quot;</span> <span class="o">/</span> <span class="s2">&quot;comment_enrichment.progress.json&quot;</span><span class="p">),</span>
+            <span class="p">],</span>
+            <span class="n">cwd</span><span class="o">=</span><span class="n">PIPELINE_DIR</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">load_path</span> <span class="o">=</span> <span class="n">cleaned_output</span>
+        <span class="n">llm_message</span> <span class="o">=</span> <span class="s2">&quot;Downloaded fields and comments were refreshed; LLM fields were not regenerated.&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">llm_command</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">PIPELINE_DIR</span> <span class="o">/</span> <span class="s2">&quot;llm_clean.py&quot;</span><span class="p">),</span>
+                <span class="s2">&quot;--input&quot;</span><span class="p">,</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">cleaned_output</span><span class="p">),</span>
+                <span class="s2">&quot;--output&quot;</span><span class="p">,</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">llm_output</span><span class="p">),</span>
+            <span class="p">]</span>
+            <span class="k">if</span> <span class="n">llm_dependencies_available</span><span class="p">():</span>
+                <span class="n">llm_command</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--resume-llm&quot;</span><span class="p">,</span> <span class="s2">&quot;--llm-batch-size&quot;</span><span class="p">,</span> <span class="s2">&quot;1000&quot;</span><span class="p">])</span>
+                <span class="n">llm_message</span> <span class="o">=</span> <span class="s2">&quot;Downloaded, comment, and LLM-generated fields were refreshed.&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">llm_command</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;--skip-llm-run&quot;</span><span class="p">)</span>
+                <span class="n">llm_message</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s2">&quot;Downloaded fields and comments were refreshed. Optional local LLM packages &quot;</span>
+                    <span class="s2">&quot;are not installed, so deterministic fallback LLM fields were used.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">llm_command</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">PIPELINE_DIR</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">load_path</span> <span class="o">=</span> <span class="n">llm_output</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">llm_message</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;Downloaded fields and comments were refreshed. LLM regeneration did not complete, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;so existing or fallback LLM values may be used: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">loaded</span> <span class="o">=</span> <span class="n">load_applicants</span><span class="p">(</span><span class="n">load_path</span><span class="p">,</span> <span class="n">reset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">cutoff_message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot; Checked for entries since </span><span class="si">{</span><span class="n">display_date</span><span class="p">(</span><span class="n">last_entry_date</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Pull Data complete. Reloaded </span><span class="si">{</span><span class="n">loaded</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> records. </span><span class="si">{</span><span class="n">llm_message</span><span class="si">}{</span><span class="n">cutoff_message</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="s2">&quot;Click Update Analysis to refresh results.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ready&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Pull Data stopped: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">run_live_data_pull_process</span><span class="p">(</span><span class="n">result_queue</span><span class="p">,</span> <span class="n">last_entry_date</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+    <span class="n">result_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">perform_live_data_pull</span><span class="p">(</span><span class="n">last_entry_date</span><span class="o">=</span><span class="n">last_entry_date</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">monitor_live_data_pull</span><span class="p">(</span><span class="n">process</span><span class="p">,</span> <span class="n">result_queue</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">BusyState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+    <span class="n">process</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">message</span><span class="p">,</span> <span class="n">_state_name</span> <span class="o">=</span> <span class="n">result_queue</span><span class="o">.</span><span class="n">get_nowait</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Pull Data stopped: process exited with code </span><span class="si">{</span><span class="n">process</span><span class="o">.</span><span class="n">exitcode</span><span class="si">}</span><span class="s2">.&quot;</span>
+    <span class="n">state</span><span class="o">.</span><span class="n">mark_idle</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">start_live_data_pull</span><span class="p">(</span><span class="n">state</span><span class="p">:</span> <span class="n">BusyState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>  <span class="c1"># pragma: no cover - starts long live process.</span>
+    <span class="n">last_entry_date</span> <span class="o">=</span> <span class="n">latest_database_entry_date</span><span class="p">()</span>
+    <span class="n">last_entry_timestamp</span> <span class="o">=</span> <span class="n">timestamp_for_entry_date</span><span class="p">(</span><span class="n">last_entry_date</span><span class="p">)</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Pull Data is running. Checking for entries since </span><span class="si">{</span><span class="n">display_date</span><span class="p">(</span><span class="n">last_entry_date</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">state</span><span class="o">.</span><span class="n">mark_running</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;busy&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;ok&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+
+    <span class="n">result_queue</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+    <span class="n">process</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span>
+        <span class="n">target</span><span class="o">=</span><span class="n">run_live_data_pull_process</span><span class="p">,</span>
+        <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">result_queue</span><span class="p">,</span> <span class="n">last_entry_date</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">process</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="n">thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span>
+        <span class="n">target</span><span class="o">=</span><span class="n">monitor_live_data_pull</span><span class="p">,</span>
+        <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">process</span><span class="p">,</span> <span class="n">result_queue</span><span class="p">,</span> <span class="n">state</span><span class="p">),</span>
+        <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;ok&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">&quot;running&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">&quot;last_entry_timestamp&quot;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">last_entry_timestamp</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">last_entry_timestamp</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">),</span>
+    <span class="p">}</span>
+
+
 <div class="viewcode-block" id="create_app">
 <a class="viewcode-back" href="../../api.html#src.app.create_app">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">create_app</span><span class="p">(</span>
@@ -169,6 +381,7 @@
     <span class="n">loader</span><span class="p">:</span> <span class="n">Loader</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">query_runner</span><span class="p">:</span> <span class="n">QueryRunner</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">busy_state</span><span class="p">:</span> <span class="n">BusyState</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">live_pull_starter</span><span class="p">:</span> <span class="n">LivePullStarter</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">testing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Flask</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a configured Flask app with injectable data and analysis dependencies.&quot;&quot;&quot;</span>
@@ -179,7 +392,21 @@
     <span class="n">scrape</span> <span class="o">=</span> <span class="n">scraper</span> <span class="ow">or</span> <span class="n">default_scraper</span>
     <span class="n">load</span> <span class="o">=</span> <span class="n">loader</span> <span class="ow">or</span> <span class="n">default_loader</span>
     <span class="n">queries</span> <span class="o">=</span> <span class="n">query_runner</span> <span class="ow">or</span> <span class="n">run_all_queries</span>
+    <span class="n">live_starter</span> <span class="o">=</span> <span class="n">live_pull_starter</span> <span class="ow">or</span> <span class="n">start_live_data_pull</span>
+    <span class="n">use_live_pull</span> <span class="o">=</span> <span class="n">scraper</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">loader</span> <span class="ow">is</span> <span class="kc">None</span>
     <span class="n">app</span><span class="o">.</span><span class="n">extensions</span><span class="p">[</span><span class="s2">&quot;busy_state&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">endpoint_response</span><span class="p">(</span><span class="n">payload</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">status_code</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return JSON for tests/API clients and redirect browser form posts.&quot;&quot;&quot;</span>
+
+        <span class="n">wants_json</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;TESTING&quot;</span><span class="p">]</span>
+            <span class="ow">or</span> <span class="n">request</span><span class="o">.</span><span class="n">accept_mimetypes</span><span class="o">.</span><span class="n">best</span> <span class="o">==</span> <span class="s2">&quot;application/json&quot;</span>
+            <span class="ow">or</span> <span class="n">request</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;X-Requested-With&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;XMLHttpRequest&quot;</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">wants_json</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">payload</span><span class="p">),</span> <span class="n">status_code</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s2">&quot;analysis&quot;</span><span class="p">))</span>
 
     <span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
     <span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/analysis&quot;</span><span class="p">)</span>
@@ -199,23 +426,28 @@
 
     <span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;/pull-data&quot;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">pull_data</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">use_live_pull</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;TESTING&quot;</span><span class="p">]:</span>
+            <span class="n">payload</span> <span class="o">=</span> <span class="n">live_starter</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+            <span class="n">status_code</span> <span class="o">=</span> <span class="mi">409</span> <span class="k">if</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;busy&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="mi">200</span>
+            <span class="k">return</span> <span class="n">endpoint_response</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="n">status_code</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="n">state</span><span class="o">.</span><span class="n">mark_running</span><span class="p">(</span><span class="s2">&quot;Pull Data is running.&quot;</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s2">&quot;busy&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;ok&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}),</span> <span class="mi">409</span>
+            <span class="k">return</span> <span class="n">endpoint_response</span><span class="p">({</span><span class="s2">&quot;busy&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;ok&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span> <span class="mi">409</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">records</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">scrape</span><span class="p">())</span>
             <span class="n">inserted</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="n">records</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
             <span class="n">state</span><span class="o">.</span><span class="n">mark_idle</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Pull Data failed: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s2">&quot;ok&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)}),</span> <span class="mi">500</span>
+            <span class="k">return</span> <span class="n">endpoint_response</span><span class="p">({</span><span class="s2">&quot;ok&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)},</span> <span class="mi">500</span><span class="p">)</span>
         <span class="n">state</span><span class="o">.</span><span class="n">mark_idle</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Pull Data complete. Loaded </span><span class="si">{</span><span class="n">inserted</span><span class="si">}</span><span class="s2"> records.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s2">&quot;ok&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;rows&quot;</span><span class="p">:</span> <span class="n">inserted</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">endpoint_response</span><span class="p">({</span><span class="s2">&quot;ok&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;rows&quot;</span><span class="p">:</span> <span class="n">inserted</span><span class="p">})</span>
 
     <span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;/update-analysis&quot;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">update_analysis</span><span class="p">():</span>
         <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">snapshot</span><span class="p">()[</span><span class="s2">&quot;running&quot;</span><span class="p">]:</span>
-            <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s2">&quot;busy&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;ok&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}),</span> <span class="mi">409</span>
+            <span class="k">return</span> <span class="n">endpoint_response</span><span class="p">({</span><span class="s2">&quot;busy&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;ok&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span> <span class="mi">409</span><span class="p">)</span>
         <span class="n">state</span><span class="o">.</span><span class="n">mark_idle</span><span class="p">(</span><span class="s2">&quot;Analysis refreshed with the latest database results.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s2">&quot;ok&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">endpoint_response</span><span class="p">({</span><span class="s2">&quot;ok&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
 
     <span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/pull-status&quot;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">pull_status</span><span class="p">():</span>

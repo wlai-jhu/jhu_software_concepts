@@ -87,6 +87,10 @@
 <p>The app uses a small observable <code class="docutils literal notranslate"><span class="pre">BusyState</span></code> object. If a pull is running,
 <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/pull-data</span></code> and <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/update-analysis</span></code> return HTTP 409 with
 <code class="docutils literal notranslate"><span class="pre">{&quot;busy&quot;:</span> <span class="pre">true,</span> <span class="pre">&quot;ok&quot;:</span> <span class="pre">false}</span></code>.</p>
+<p>In normal browser use, <code class="docutils literal notranslate"><span class="pre">Pull</span> <span class="pre">Data</span></code> starts the live scraper/clean/enrich/load
+pipeline in a background process, then redirects back to the analysis page.
+The status endpoint reports when the process finishes. In tests, the same route
+uses injected fakes so the suite never depends on a live network scrape.</p>
 </section>
 <section id="idempotency-strategy">
 <h2>Idempotency Strategy<a class="headerlink" href="#idempotency-strategy" title="Link to this heading"></a></h2>

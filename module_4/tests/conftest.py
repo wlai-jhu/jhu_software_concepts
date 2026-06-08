@@ -1,4 +1,5 @@
 import os
+import getpass
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -49,7 +50,7 @@ def database_url():
         url = (
             configured_url
             if "test" in Path(urlparse(configured_url).path).name
-            else "postgresql://wmacbookpro@localhost:5432/gradcafe_test"
+            else f"postgresql://{getpass.getuser()}@localhost:5432/gradcafe_test"
         )
     dbname = Path(urlparse(url).path).name
     if "test" not in dbname:

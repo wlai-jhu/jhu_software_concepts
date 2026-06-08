@@ -6,7 +6,9 @@ Web Layer
 
 ``src.app`` exposes ``create_app(...)``. Tests can inject fake scraper, loader,
 query, and busy-state objects so the Flask routes are deterministic and do not
-touch the network.
+touch the network. In normal browser use, ``POST /pull-data`` starts a
+background Module 3-style live pipeline process and ``GET /pull-status`` reports
+progress back to the page.
 
 ETL and Database Layer
 ----------------------

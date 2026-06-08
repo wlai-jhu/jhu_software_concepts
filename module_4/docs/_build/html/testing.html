@@ -48,6 +48,7 @@
 <li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Testing Guide</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#database-safety">Database Safety</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#coverage-scope">Coverage Scope</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#markers">Markers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#selectors">Selectors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#fixtures-and-test-doubles">Fixtures and Test Doubles</a></li>
@@ -90,11 +91,19 @@ There are no live scrapes, browser clicks, or sleeps in the tests.</p>
 <p>Database tests truncate and reload the <code class="docutils literal notranslate"><span class="pre">applicants</span></code> table, so they must use a
 separate test database. Set <code class="docutils literal notranslate"><span class="pre">TEST_DATABASE_URL</span></code> before running tests locally:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>createdb<span class="w"> </span>gradcafe_test
-<span class="nb">export</span><span class="w"> </span><span class="nv">TEST_DATABASE_URL</span><span class="o">=</span><span class="s2">&quot;postgresql://wmacbookpro@localhost:5432/gradcafe_test&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">TEST_DATABASE_URL</span><span class="o">=</span><span class="s2">&quot;postgresql://</span><span class="k">$(</span>whoami<span class="k">)</span><span class="s2">@localhost:5432/gradcafe_test&quot;</span>
 </pre></div>
 </div>
 <p>The fixture refuses to run destructive tests against a database whose name does
 not contain <code class="docutils literal notranslate"><span class="pre">test</span></code>.</p>
+</section>
+<section id="coverage-scope">
+<h2>Coverage Scope<a class="headerlink" href="#coverage-scope" title="Link to this heading"></a></h2>
+<p>The retained live scraper pipeline under <code class="docutils literal notranslate"><span class="pre">src/pipeline/</span></code> is documented with
+Sphinx but excluded from unit coverage because it performs live network
+collection. Flask route tests use dependency injection with fake scraper and
+loader functions, which keeps the suite deterministic and avoids long-running
+scrapes.</p>
 </section>
 <section id="markers">
 <h2>Markers<a class="headerlink" href="#markers" title="Link to this heading"></a></h2>
