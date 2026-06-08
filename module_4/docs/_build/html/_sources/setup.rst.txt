@@ -7,11 +7,20 @@ Install dependencies from the repository root:
 
    python -m pip install -r module_4/requirements.txt
 
-Configure PostgreSQL with ``DATABASE_URL``:
+Configure PostgreSQL with ``DATABASE_URL``. Do not copy placeholder values like
+``USER`` or ``PASSWORD`` literally.
+
+For this Mac's local Postgres.app-style setup, use:
 
 .. code-block:: bash
 
-   export DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/gradcafe"
+   export DATABASE_URL="postgresql://wmacbookpro@localhost:5432/gradcafe"
+
+For a password-based local ``postgres`` user, use:
+
+.. code-block:: bash
+
+   export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/gradcafe"
 
 Run the Flask application:
 

@@ -1,12 +1,22 @@
 import os
 from contextlib import contextmanager
+from urllib.parse import urlparse
 
 
 DEFAULT_DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/gradcafe"
 
 
 def database_url() -> str:
-    return os.environ.get("DATABASE_URL", DEFAULT_DATABASE_URL)
+    url = os.environ.get("DATABASE_URL", DEFAULT_DATABASE_URL)
+    parsed = urlparse(url)
+    if parsed.username in {"USER", "USERNAME"} or parsed.password == "PASSWORD":
+        raise RuntimeError(
+            "DATABASE_URL still contains placeholder credentials. Use a real PostgreSQL "
+            "connection string, such as postgresql://wmacbookpro@localhost:5432/gradcafe "
+            "for local Postgres.app or postgresql://postgres:postgres@localhost:5432/gradcafe "
+            "for a password-based postgres user."
+        )
+    return url
 
 
 def require_psycopg():

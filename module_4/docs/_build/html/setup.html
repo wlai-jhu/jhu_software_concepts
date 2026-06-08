@@ -81,8 +81,14 @@
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>module_4/requirements.txt
 </pre></div>
 </div>
-<p>Configure PostgreSQL with <code class="docutils literal notranslate"><span class="pre">DATABASE_URL</span></code>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">DATABASE_URL</span><span class="o">=</span><span class="s2">&quot;postgresql://USER:PASSWORD@localhost:5432/gradcafe&quot;</span>
+<p>Configure PostgreSQL with <code class="docutils literal notranslate"><span class="pre">DATABASE_URL</span></code>. Do not copy placeholder values like
+<code class="docutils literal notranslate"><span class="pre">USER</span></code> or <code class="docutils literal notranslate"><span class="pre">PASSWORD</span></code> literally.</p>
+<p>For this Mac’s local Postgres.app-style setup, use:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">DATABASE_URL</span><span class="o">=</span><span class="s2">&quot;postgresql://wmacbookpro@localhost:5432/gradcafe&quot;</span>
+</pre></div>
+</div>
+<p>For a password-based local <code class="docutils literal notranslate"><span class="pre">postgres</span></code> user, use:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">DATABASE_URL</span><span class="o">=</span><span class="s2">&quot;postgresql://postgres:postgres@localhost:5432/gradcafe&quot;</span>
 </pre></div>
 </div>
 <p>Run the Flask application:</p>

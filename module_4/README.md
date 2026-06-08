@@ -27,10 +27,19 @@ Create or activate the project virtual environment, then install dependencies:
 python -m pip install -r module_4/requirements.txt
 ```
 
-Set a PostgreSQL connection string with `DATABASE_URL`:
+Set a PostgreSQL connection string with `DATABASE_URL`. Do not copy placeholder
+values like `USER` or `PASSWORD` literally.
+
+For this Mac's local Postgres.app-style setup, use:
 
 ```bash
-export DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/gradcafe"
+export DATABASE_URL="postgresql://wmacbookpro@localhost:5432/gradcafe"
+```
+
+For a password-based local `postgres` user, use:
+
+```bash
+export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/gradcafe"
 ```
 
 The GitHub Actions workflow uses:
@@ -45,6 +54,12 @@ From the repository root:
 
 ```bash
 python -m flask --app module_4.src.app run
+```
+
+If your terminal is already inside `module_4`, use:
+
+```bash
+python -m flask --app src.app run
 ```
 
 Open:

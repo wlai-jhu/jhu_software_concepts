@@ -70,6 +70,10 @@ def test_database_helpers_cover_default_and_import_error(monkeypatch):
     monkeypatch.delenv("DATABASE_URL", raising=False)
     assert db.database_url() == db.DEFAULT_DATABASE_URL
 
+    monkeypatch.setenv("DATABASE_URL", "postgresql://USER:PASSWORD@localhost:5432/gradcafe")
+    with pytest.raises(RuntimeError, match="placeholder credentials"):
+        db.database_url()
+
     real_import = builtins.__import__
 
     def fake_import(name, *args, **kwargs):
