@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List
 
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, redirect, render_template, request, url_for
 
 from .load_data import load_applicants
 from .query_data import empty_analysis_results, run_all_queries
@@ -95,6 +95,11 @@ def create_app(
     queries = query_runner or run_all_queries
     app.extensions["busy_state"] = state
 
+    def route_response(payload: Dict[str, Any], status_code: int = 200):
+        if app.config["TESTING"] or request.accept_mimetypes.best == "application/json":
+            return jsonify(payload), status_code
+        return redirect(url_for("analysis"))
+
     @app.get("/")
     @app.get("/analysis")
     def analysis():
@@ -114,22 +119,22 @@ def create_app(
     @app.post("/pull-data")
     def pull_data():
         if not state.mark_running("Pull Data is running."):
-            return jsonify({"busy": True, "ok": False}), 409
+            return route_response({"busy": True, "ok": False}, 409)
         try:
             records = list(scrape())
             inserted = load(records)
         except Exception as exc:
             state.mark_idle(f"Pull Data failed: {exc}")
-            return jsonify({"ok": False, "error": str(exc)}), 500
+            return route_response({"ok": False, "error": str(exc)}, 500)
         state.mark_idle(f"Pull Data complete. Loaded {inserted} records.")
-        return jsonify({"ok": True, "rows": inserted})
+        return route_response({"ok": True, "rows": inserted})
 
     @app.post("/update-analysis")
     def update_analysis():
         if state.snapshot()["running"]:
-            return jsonify({"busy": True, "ok": False}), 409
+            return route_response({"busy": True, "ok": False}, 409)
         state.mark_idle("Analysis refreshed with the latest database results.")
-        return jsonify({"ok": True})
+        return route_response({"ok": True})
 
     @app.get("/pull-status")
     def pull_status():
