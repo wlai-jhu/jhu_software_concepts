@@ -1,0 +1,8 @@
+beautifulsoup4
+certifi
+Flask
+psycopg[binary]
+pytest
+pytest-cov
+sphinx
+sphinx-rtd-theme

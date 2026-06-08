@@ -1,0 +1,231 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Reference &mdash; Grad Cafe Module 4 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=f2a433a1"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Operational Notes" href="operational-notes.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Grad Cafe Module 4
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Overview and Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing.html">Testing Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="operational-notes.html">Operational Notes</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.app">Flask Application</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.app.BusyState"><code class="docutils literal notranslate"><span class="pre">BusyState</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.app.create_app"><code class="docutils literal notranslate"><span class="pre">create_app()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.app.default_loader"><code class="docutils literal notranslate"><span class="pre">default_loader()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.app.default_scraper"><code class="docutils literal notranslate"><span class="pre">default_scraper()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.db">Database Connections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.load_data">Data Loading</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.load_data.first_present"><code class="docutils literal notranslate"><span class="pre">first_present()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.load_data.normalize_record"><code class="docutils literal notranslate"><span class="pre">normalize_record()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.load_data.parse_date"><code class="docutils literal notranslate"><span class="pre">parse_date()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.load_data.parse_float"><code class="docutils literal notranslate"><span class="pre">parse_float()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.query_data">Analysis Queries</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.query_data.AnalysisQuestion"><code class="docutils literal notranslate"><span class="pre">AnalysisQuestion</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.query_data.empty_analysis_results"><code class="docutils literal notranslate"><span class="pre">empty_analysis_results()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.query_data.expected_result_keys"><code class="docutils literal notranslate"><span class="pre">expected_result_keys()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#src.query_data.format_result"><code class="docutils literal notranslate"><span class="pre">format_result()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#pipeline-scrape-script">Pipeline Scrape Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pipeline-clean-script">Pipeline Clean Script</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Grad Cafe Module 4</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">API Reference</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/api.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="api-reference">
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Link to this heading"></a></h1>
+<section id="module-src.app">
+<span id="flask-application"></span><h2>Flask Application<a class="headerlink" href="#module-src.app" title="Link to this heading"></a></h2>
+<p>Flask application factory for the Grad Cafe analytics service.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.app.BusyState">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">src.app.</span></span><span class="sig-name descname"><span class="pre">BusyState</span></span><a class="reference internal" href="_modules/src/app.html#BusyState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.app.BusyState" title="Link to this definition"></a></dt>
+<dd><p>Small observable state container used to gate button requests.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.app.create_app">
+<span class="sig-prename descclassname"><span class="pre">src.app.</span></span><span class="sig-name descname"><span class="pre">create_app</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">scraper</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_runner</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">busy_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#src.app.BusyState" title="src.app.BusyState"><span class="pre">BusyState</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">testing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Flask</span></span></span><a class="reference internal" href="_modules/src/app.html#create_app"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.app.create_app" title="Link to this definition"></a></dt>
+<dd><p>Create a configured Flask app with injectable data and analysis dependencies.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.app.default_loader">
+<span class="sig-prename descclassname"><span class="pre">src.app.</span></span><span class="sig-name descname"><span class="pre">default_loader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">records</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="_modules/src/app.html#default_loader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.app.default_loader" title="Link to this definition"></a></dt>
+<dd><p>Load scraped records into PostgreSQL using the Module 3 schema.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.app.default_scraper">
+<span class="sig-prename descclassname"><span class="pre">src.app.</span></span><span class="sig-name descname"><span class="pre">default_scraper</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/src/app.html#default_scraper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.app.default_scraper" title="Link to this definition"></a></dt>
+<dd><p>Read the submitted Module 2 records used as the deterministic local source.</p>
+</dd></dl>
+
+</section>
+<section id="module-src.db">
+<span id="database-connections"></span><h2>Database Connections<a class="headerlink" href="#module-src.db" title="Link to this heading"></a></h2>
+</section>
+<section id="module-src.load_data">
+<span id="data-loading"></span><h2>Data Loading<a class="headerlink" href="#module-src.load_data" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="src.load_data.first_present">
+<span class="sig-prename descclassname"><span class="pre">src.load_data.</span></span><span class="sig-name descname"><span class="pre">first_present</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="_modules/src/load_data.html#first_present"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.load_data.first_present" title="Link to this definition"></a></dt>
+<dd><p>Return the first populated value from alternate scraper/LLM field names.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.load_data.normalize_record">
+<span class="sig-prename descclassname"><span class="pre">src.load_data.</span></span><span class="sig-name descname"><span class="pre">normalize_record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/src/load_data.html#normalize_record"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.load_data.normalize_record" title="Link to this definition"></a></dt>
+<dd><p>Convert one JSON applicant record into the columns expected by PostgreSQL.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.load_data.parse_date">
+<span class="sig-prename descclassname"><span class="pre">src.load_data.</span></span><span class="sig-name descname"><span class="pre">parse_date</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="_modules/src/load_data.html#parse_date"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.load_data.parse_date" title="Link to this definition"></a></dt>
+<dd><p>Accept the date formats produced by the scraper and normalize them for PostgreSQL.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.load_data.parse_float">
+<span class="sig-prename descclassname"><span class="pre">src.load_data.</span></span><span class="sig-name descname"><span class="pre">parse_float</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="_modules/src/load_data.html#parse_float"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.load_data.parse_float" title="Link to this definition"></a></dt>
+<dd><p>Extract a numeric value from fields that may include labels or extra text.</p>
+</dd></dl>
+
+</section>
+<section id="module-src.query_data">
+<span id="analysis-queries"></span><h2>Analysis Queries<a class="headerlink" href="#module-src.query_data" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.query_data.AnalysisQuestion">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">src.query_data.</span></span><span class="sig-name descname"><span class="pre">AnalysisQuestion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">question</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sql</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">explanation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'answer'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/query_data.html#AnalysisQuestion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.query_data.AnalysisQuestion" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.query_data.empty_analysis_results">
+<span class="sig-prename descclassname"><span class="pre">src.query_data.</span></span><span class="sig-name descname"><span class="pre">empty_analysis_results</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/src/query_data.html#empty_analysis_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.query_data.empty_analysis_results" title="Link to this definition"></a></dt>
+<dd><p>Return a deterministic fallback result so the page still renders an Answer label.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.query_data.expected_result_keys">
+<span class="sig-prename descclassname"><span class="pre">src.query_data.</span></span><span class="sig-name descname"><span class="pre">expected_result_keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/src/query_data.html#expected_result_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.query_data.expected_result_keys" title="Link to this definition"></a></dt>
+<dd><p>Return the keys every analysis result dictionary exposes to templates.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.query_data.format_result">
+<span class="sig-prename descclassname"><span class="pre">src.query_data.</span></span><span class="sig-name descname"><span class="pre">format_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">question</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#src.query_data.AnalysisQuestion" title="src.query_data.AnalysisQuestion"><span class="pre">AnalysisQuestion</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">row</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rows</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/src/query_data.html#format_result"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.query_data.format_result" title="Link to this definition"></a></dt>
+<dd><p>Turn raw SQL rows into short answers that read well in all outputs.</p>
+</dd></dl>
+
+</section>
+<section id="pipeline-scrape-script">
+<h2>Pipeline Scrape Script<a class="headerlink" href="#pipeline-scrape-script" title="Link to this heading"></a></h2>
+<p>The original scraper script is retained under <code class="docutils literal notranslate"><span class="pre">src/pipeline/scrape.py</span></code> for
+the Grad Cafe data collection workflow.</p>
+</section>
+<section id="pipeline-clean-script">
+<h2>Pipeline Clean Script<a class="headerlink" href="#pipeline-clean-script" title="Link to this heading"></a></h2>
+<p>The original cleaner script is retained under <code class="docutils literal notranslate"><span class="pre">src/pipeline/clean.py</span></code> for
+normalizing scraped data before loading.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="operational-notes.html" class="btn btn-neutral float-left" title="Operational Notes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,4 @@
+[run]
+omit =
+    src/pipeline/*
+    src/__init__.py
